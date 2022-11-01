@@ -2,6 +2,8 @@
 
 kernel_version="v6.0.3"
 
+alx_wol_dir="`dirname $0`"
+
 get_source () {
 	wget -O ${targetdir}/$1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/drivers/net/ethernet/atheros/alx/$1?h=${kernel_version}
 	if [ $? -ne 0 ];
@@ -26,7 +28,7 @@ cp_exit () {
 	fi
 }
 
-tmpfile=".target"
+tmpfile="${alx_wol_dir}/.target"
 handle () {
 	rm "${tmpfile}"
 	while read -r line;
@@ -46,10 +48,19 @@ then
 	exit 1
 fi
 
-this_name="`grep '^[^#]*PACKAGE_NAME=\"' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p'`"
-this_version="`grep '^[^#]*PACKAGE_VERSION=\"' dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p'`"
-this_patch="`grep '^[^#]*PATCH\[0\]=\"' dkms.conf | sed -n 's|.*PATCH\[0\]=\"||g;s|\"$||g;p'`"
-modulename="`grep '^[^#]*BUILT_MODULE_NAME\[0\]=\"' dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p'`"
+force=0
+if [ $# -eq 1 ];
+then
+	if [ "$1" == "--force" ];
+	then
+		force=1
+	fi
+fi
+
+this_name="`grep '^[^#]*PACKAGE_NAME=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p'`"
+this_version="`grep '^[^#]*PACKAGE_VERSION=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p'`"
+this_patch="`grep '^[^#]*PATCH\[0\]=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PATCH\[0\]=\"||g;s|\"$||g;p'`"
+modulename="`grep '^[^#]*BUILT_MODULE_NAME\[0\]=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p'`"
 
 chk=`which dkms`
 if [ -z $chk ];
@@ -66,11 +77,16 @@ then
 	cur_ver="`echo "${current}" | sed -n 's|^.*/||g;p'`"
 	if [ "${cur_ver}" != "${this_version}" ];
 	then
-		echo "----> \"${this_name}/${this_version}\" will be installed"
-		echo "      before doing so current installed version"
-		echo "      \"${current}\" will be removed."
-		echo -n "SHALL TIHS BE DONE (enter yes)? "
-		read answer
+		if [ $force -eq 0 ];
+		then
+			echo "----> \"${this_name}/${this_version}\" will be installed"
+			echo "      before doing so current installed version"
+			echo "      \"${current}\" will be removed."
+			echo -n "SHALL TIHS BE DONE (enter yes)? "
+			read answer
+		else
+			answer="yes"
+		fi
 		if [ "${answer}" != "yes" ];
 		then
 			echo "installation aborted,"
@@ -101,9 +117,9 @@ get_source reg.h
 mkdir ${basedir}/patches
 
 # copy all required files
-cp_exit "patches/${this_patch}" "${basedir}/patches"
-cp_exit "dkms.conf" "${basedir}"
-cp_exit "Makefile" "${basedir}"
+cp_exit "${alx_wol_dir}/patches/${this_patch}" "${basedir}/patches"
+cp_exit "${alx_wol_dir}/dkms.conf" "${basedir}"
+cp_exit "${alx_wol_dir}/Makefile" "${basedir}"
 
 if [ ! -z ${current} ];
 then
