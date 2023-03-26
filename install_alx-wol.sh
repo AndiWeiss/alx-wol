@@ -1,16 +1,6 @@
 #!/bin/sh
 
-kernel_version="v6.0.3"
-
 alx_wol_dir="`dirname $0`"
-
-get_source () {
-	wget -O ${targetdir}/$1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/drivers/net/ethernet/atheros/alx/$1?h=${kernel_version}
-	if [ $? -ne 0 ];
-	then
-		exit 1
-	fi
-}
 
 mk_dir () {
 	mkdir "$1"
@@ -21,7 +11,7 @@ mk_dir () {
 }
 
 cp_exit () {
-	cp "$1" "$2"
+	cp -p "$1" "$2"
 	if [ $? -ne 0 ];
 	then
 		exit 1
@@ -59,7 +49,7 @@ fi
 
 this_name="`grep '^[^#]*PACKAGE_NAME=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p'`"
 this_version="`grep '^[^#]*PACKAGE_VERSION=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p'`"
-this_patch="`grep '^[^#]*PATCH\[0\]=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*PATCH\[0\]=\"||g;s|\"$||g;p'`"
+patches="`find patches -type f`"
 modulename="`grep '^[^#]*BUILT_MODULE_NAME\[0\]=\"' ${alx_wol_dir}/dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p'`"
 
 chk=`which dkms`
@@ -100,26 +90,17 @@ fi
 basedir="/usr/src/${this_name}-${this_version}"
 mk_dir ${basedir}
 
-# create dir for sources
-targetdir="${basedir}/alx"
-mk_dir ${targetdir}
-
-# fetch sources
-get_source alx.h
-get_source ethtool.c
-get_source hw.c
-get_source hw.h
-get_source main.c
-get_source Makefile
-get_source reg.h
-
 # create dir for patches
 mkdir ${basedir}/patches
 
 # copy all required files
-cp_exit "${alx_wol_dir}/patches/${this_patch}" "${basedir}/patches"
+for patch in ${patches};
+do
+	cp_exit "${alx_wol_dir}/${patch}" "${basedir}/patches"
+done
 cp_exit "${alx_wol_dir}/dkms.conf" "${basedir}"
 cp_exit "${alx_wol_dir}/Makefile" "${basedir}"
+cp_exit "${alx_wol_dir}/FetchSources.sh" "${basedir}"
 
 if [ ! -z ${current} ];
 then
@@ -137,8 +118,6 @@ then
 	echo "`basename $0`: installation of \"${this_name}/${this_version}\" failed" 1>&2
 	exit 1
 fi
-
-echo "Ergebnis: >${chk}<"
 
 echo "`basename $0`: installation of \"${this_name}/${this_version}\" succeeded"
 
