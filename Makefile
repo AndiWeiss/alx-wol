@@ -13,3 +13,7 @@ endif
 ifneq "$(filter 6.2.%,$(kernelver))" ""
 obj-m += alx_6.2/
 endif
+
+ifneq "$(filter 6.3.%,$(kernelver))" ""
+obj-m += alx_6.3/
+endif
