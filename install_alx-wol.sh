@@ -57,6 +57,11 @@ then
 	cur_ver="$(echo "${current}" | sed -n 's|^.*/||g;p')"
 	if [ "${cur_ver}" != "${this_version}" ];
 	then
+		if [ "${cur_ver}" = "1.3" ];
+		then
+			# fix a problem in deinstallation of 1.3
+			cp_exit "${alx_wol_dir}/HandleInitrd.sh" "/usr/src/${this_name}-${cur_ver}"
+		fi
 		if [ $force -eq 0 ];
 		then
 			echo "----> \"${this_name}/${this_version}\" will be installed"
@@ -72,14 +77,28 @@ then
 			echo "installation aborted,"
 			exit 1
 		else
-			dkms remove ${this_name}/${cur_ver}
+			dkms remove ${this_name}/${cur_ver} --all
 			if [ $? -ne 0 ];
 			then
 				echo "${script}: removal of \"${current}\" failed" 1>&2
 				exit 1
 			fi
-			rm -rf /usr/src/${this_name}-${cur_ver}
+			# need to be sure that kernel.org is available
+			# otherwise the next fetch may fail
+			while [ true ];
+			do
+				ping -c 1 www.kernel.org &> /dev/null
+				if [ $? = 0 ];
+				then
+					break
+				fi
+				sleep 1
+			done
 		fi
+	else
+		# this version is already installed
+		echo "exit because this version is already installed"
+		exit 0
 	fi
 fi
 

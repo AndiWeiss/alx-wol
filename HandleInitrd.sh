@@ -36,3 +36,15 @@ else
 
 	rm ${module_file}
 fi
+
+# need to be sure that kernel.org is available
+# otherwise the next fetch may fail
+while [ true ];
+do
+	ping -c 1 www.kernel.org &> /dev/null
+	if [ $? = 0 ];
+	then
+		break
+	fi
+	sleep 1
+done

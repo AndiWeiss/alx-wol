@@ -77,11 +77,13 @@ Now I did a real testing and bug fixing marathon. I tested the
 functionality:
 
 * on Xubuntu 22.04
+  - with kernel 5.15
   - with kernel 5.19
   - with kernel 6.0
   - with kernel 6.1
   - with kernel 6.2
   - with kernel 6.3
+  - with kernel 6.4
 
 * on Xubuntu 23.04
   - with kernel 6.2
@@ -163,7 +165,20 @@ again which module is active. Now it does it the other way round: if the
 active module is not the original one it deinstalls the active module
 and installs the original again.
 
-## Disclaimer
+# History
+
+**Version 1.4**
+
+bugfix on installation of newer version of alx-wol  
+intruduction of support for kernel 6.4
+
+**Version 1.3**
+
+First full functional version  
+Supports Kernel 5.15 - 5.19, 6.0, 6.1, 6.2 and 6.3  
+Deinstallation of previous versions doesn't work correctly.  
+
+# Disclaimer
 
 This package is provides AS IS.  
 **Use it on your own risk.**  
