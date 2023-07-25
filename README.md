@@ -167,6 +167,11 @@ and installs the original again.
 
 # History
 
+**Version 1.4.1**
+
+Workaround for missing dependency in 6.4.6 kernel package in ubuntu  
+Package expects to find fcc-13 but there is no dependency
+
 **Version 1.4**
 
 bugfix on installation of newer version of alx-wol  
