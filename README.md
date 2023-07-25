@@ -170,7 +170,7 @@ and installs the original again.
 **Version 1.4.1**
 
 Workaround for missing dependency in 6.4.6 kernel package in ubuntu  
-Package expects to find fcc-13 but there is no dependency
+Package expects to find gcc-13 but there is no dependency
 
 **Version 1.4**
 
