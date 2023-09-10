@@ -92,21 +92,28 @@ functionality:
 In any case 'with kernel x.y' means with several versions of that
 kernel (e.g. 6.2.1, 6.2.2, 6.2.3 and so on).
 
-## Problems based on the gcc version
+## Problems with kernel version 6.4.13 and newer
 
 Starting with kernel version 6.4.13 the ubuntu kernels have been
-compiled with gcc 13.2.
-It seems that the usage of that compiler is required to get a module
-compiled, but that gcc version seems not to be available in the ubuntu
-delivery.
+compiled with libc6 >= 2.38.
 
-Because of this alx-wol can't be used with these newer kernels.
+The regular ubuntu 23.04 contains libc6 in version 2.37.
 
-I'm currently working on a new version which checks if the gcc version
-used to compile the kernel is available on the system and if yes use
-that gcc version.
+Because of this the kernel packages can't be installed.
 
-So stay tuned, as soon as I have that running I'll publish it.
+As the packages can't be installed the alx-woll mechanism will not be
+started. So the problem here is NOT alx-wol, it's the dependency of the
+new kernels to glibc6 >= 2.38.
+
+I found that compiling the kernel by yourself leads to a functional
+kernel. So I would assume that in that case also alx-wol should be
+functional again.
+
+As soon as libc6 2.38 is rolled out alx-wol should work out of the box
+again.
+
+Nevertheless I'm working on the next update with a better handling of
+the required compiler.
 
 ## Problems found during testing
 
