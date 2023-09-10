@@ -92,6 +92,22 @@ functionality:
 In any case 'with kernel x.y' means with several versions of that
 kernel (e.g. 6.2.1, 6.2.2, 6.2.3 and so on).
 
+## Problems based on the gcc version
+
+Starting with kernel version 6.4.13 the ubuntu kernels have been
+compiled with gcc 13.2.
+It seems that the usage of that compiler is required to get a module
+compiled, but that gcc version seems not to be available in the ubuntu
+delivery.
+
+Because of this alx-wol can't be used with these newer kernels.
+
+I'm currently working on a new version which checks if the gcc version
+used to compile the kernel is available on the system and if yes use
+that gcc version.
+
+So stay tuned, as soon as I have that running I'll publish it.
+
 ## Problems found during testing
 
 The change to kernel 6.3 together with the new ubuntu lead to several
