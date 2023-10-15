@@ -103,6 +103,19 @@ then
 	fi
 fi
 
+if [ "${srcversion}" = "" ];
+then
+	echo "${kernelver}" | grep "6\.5\." > /dev/null
+	if [ $? -eq 0 ];
+	then
+		# this is for kernel 6.5.x
+		srcversion="v6.5"
+		outdir="alx_6.5"
+		files_to_fetch="alx.h ethtool.c hw.c hw.h main.c Makefile reg.h"
+		patches="0001-alx-wol-v6.3.patch"
+	fi
+fi
+
 if [ "${srcversion}" != "" ];
 then
 	# found a known kernel version

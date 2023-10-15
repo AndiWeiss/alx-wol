@@ -13,11 +13,12 @@ then
 		update-initramfs -u -k ${lastversion}
 
 		export $( grep -vE "^(#.*|\s*)$" ${module_file} )
-		echo "${current_module}" | grep "/kernel/drivers/net/ethernet/atheros/alx/alx.ko$" > /dev/null
+		echo "${current_module}" | grep "/kernel/drivers/net/ethernet/atheros/alx/alx.ko.*$" > /dev/null
 		if [ $? -ne 0 ];
 		then
 			rmmod alx
-			insmod /usr/lib/modules/$(uname -r)/kernel/drivers/net/ethernet/atheros/alx/alx.ko
+			mod=$(find /usr/lib/modules/$(uname -r)/kernel/drivers/net/ethernet/atheros/alx -name 'alx.ko*')
+			insmod ${mod}
 		fi
 	fi
 else
@@ -27,11 +28,12 @@ else
 	update-initramfs -u -k ${kernelver}
 
 	export $( grep -vE "^(#.*|\s*)$" ${module_file} )
-	echo "${current_module}" | grep "/kernel/drivers/net/ethernet/atheros/alx/alx.ko$" > /dev/null
+	echo "${current_module}" | grep "/kernel/drivers/net/ethernet/atheros/alx/alx.ko.*$" > /dev/null
 	if [ $? -eq 0 ];
 	then
 		rmmod alx
-		insmod /usr/lib/modules/$(uname -r)/updates/dkms/alx.ko
+		mod=$(find /usr/lib/modules/$(uname -r)/updates/dkms -name 'alx.ko*')
+		insmod ${mod}
 	fi
 
 	rm ${module_file}

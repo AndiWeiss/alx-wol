@@ -2,41 +2,66 @@
 
 When using the Atheros alx driver on Ubuntu 20.04 the Wake On Lan
 feature is functional as long as a kernel 5.14 is used.  
-When switching to kernel 5.15 the wol functionality is not available
-anymore.
+When switching to kernel 5.15 or newer the wol functionality is not
+available anymore. Also using a newer Ubuntu version doesn't lead to a
+functional WOL with that ethernet interface.
 
 This package adds the support for wol again as dkms package.
 
 ## Where does it come from
 
-This dkms bases on the currently most actual kernel sources, the v6.0.3.  
-These alx sources are fetched during installation.  
-I did a comparison beginning with kernel v5.15.50 until v6.0.x and
-found only minor differences in the alx driver.
-All of these kernel versions can use the same sources and the same
-patch to get the alx running with wake on lan.
-So I decided to use the sources of the kernel 6.0.3 for all of these
-versions. To enable the wake on lan feature again I created the patch
-**patches/0000-alx-wol-v6.0.3.patch**.
+I was using an Ubuntu 20.04 on a home server containing the Atheros
+ethernet chip. I configured it for Wake On Lan a long time ago and with
+one update the functionality was gone.
 
-In the next step I added the support for kernel 6.1 and 6.2. Here I
-found that there was an interface change in the network system.
-The parameter weight of function netif_napi_add has been dropped
-starting with kernel 6.1. This leads to the need of different sources
-for kernels up to 6.0 and kernels starting with 6.1.
+This was the change from kernel v5.14 to kernel v5.15.
 
-Luckily the patch for the 6.0.3 applies without any issue on the new
-6.1 and 6.2 atheros driver. Because of that I only had to take care to
-use different sources for different kernel versions.
+This lead to the motivation to bring wol to life again. I checked the
+basis where wol was removed from the alx driver on kernel.org and
+created a patch to bring it in again.
 
-When checking the build for the 6.3 kernel I found that the 6.0.3 patch
-doesn't apply on the 6.3 alx sources.  
-I had to create a new patch - **patches/0001-alx-wol-v6.3.patch**
+With the next kernel update of Ubuntu I decided to get the compilation
+of th emodule done automatically. Here my journey into dkms started.
 
-Previously I fetched the kernel source during the initialization script.
+With this version (1.5) of alx-wol I hade to create fixes for several
+issues on Ubuntu side. The latest thing I found is not yet fixed, so
+alx-wol 1.5 is not usable on Ubuntu 23.10 up to now. But I'll do my
+very best.
 
-With the current version the sources are fetched during dkms run as
-soon as the kernel version or major revision changes.
+## Compatibility
+
+alx-wol has been tested on Ubuntu 22.04 and 23.04. With regular kernel
+updates delieverd by Ubuntu the system works pretty nice.
+
+If you want to use newer mainline kernels you can download and install
+them. But you hae to keep in mind that Ubuntu changes the environment
+for building these kernels. So it can happen that a precompiled kernel
+package leads to issues of alx-wol.
+
+That was the case with kernel versions 6.4.13 and newer. Here Ubuntu
+used a newer version of libc which wasn't compatible to the previous
+one. It was not possible to install these mainline kernel packages
+without additional big changes in the system. But as these packages
+can't be installed the dkms mechanisms of alx-wol are not triggered.
+It is NOT a problem of alx-wol.
+
+With Ubuntu 23.10 Ubuntu introduced a change in update-initramfs.
+With this Ubuntu version the alx-wol system creates a functional
+alx module, but this module is not intgrated into the initramfs.
+So after reboot the original Ubuntu version of the alx module is used
+again and the wol functionality is gone again. Again this is an issue
+of Ubuntu, not of alx-wol. Nevertheless I'll try to create a fic for
+that.
+
+In general: Ubuntu 22.04, 22.10 and 23.04 are supported.
+Kernel versions v5.15.50 and newer are supported.  
+But not all of the Ubuntu Mainline kernel packages are installable.
+
+Meanwhile it seems that Ubuntu took the mainline kernel download
+offline. Some time ago there was the page
+[Mainline Kernel PPA](https://kernel.ubuntu.com/~kernel-ppa/mainline/)
+but it seems to be not available anymore. So currently I don't know
+where to get newer test kernels without compiling them by myself.
 
 ## How to use it
 
@@ -64,131 +89,32 @@ alx-wol module. The initrd is updated so that the wol feature is still
 available after the next reboot. If the kernel is changed to a different
 major version the reeboot should be done soon.
 
-## Problems with the previous versions of alx-wol
+## Issues found on Ubuntu
 
-During implementation of the changes for linux kernel 6.3 I faced that
-my previous versions of this package didn't work properly.
+This is a list of issues found in the Ubuntu world leading to large
+effort in alx-wol:
 
-In my configuration everything looked like it worked fine, but when I
-started a new test marathon I found id didn't work at all.  
-Functional wol on my system was just good luck.
-
-Now I did a real testing and bug fixing marathon. I tested the
-functionality:
-
-* on Xubuntu 22.04
-  - with kernel 5.15
-  - with kernel 5.19
-  - with kernel 6.0
-  - with kernel 6.1
-  - with kernel 6.2
-  - with kernel 6.3
-  - with kernel 6.4
-
-* on Xubuntu 23.04
-  - with kernel 6.2
-  - with kernel 6.3
-
-In any case 'with kernel x.y' means with several versions of that
-kernel (e.g. 6.2.1, 6.2.2, 6.2.3 and so on).
-
-## Problems with kernel version 6.4.13 and newer
-
-Starting with kernel version 6.4.13 the ubuntu kernels have been
-compiled with libc6 >= 2.38.
-
-The regular ubuntu 23.04 contains libc6 in version 2.37.
-
-Because of this the kernel packages can't be installed.
-
-As the packages can't be installed the alx-woll mechanism will not be
-started. So the problem here is NOT alx-wol, it's the dependency of the
-new kernels to glibc6 >= 2.38.
-
-I found that compiling the kernel by yourself leads to a functional
-kernel. So I would assume that in that case also alx-wol should be
-functional again.
-
-As soon as libc6 2.38 is rolled out alx-wol should work out of the box
-again.
-
-Nevertheless I'm working on the next update with a better handling of
-the required compiler.
-
-## Problems found during testing
-
-The change to kernel 6.3 together with the new ubuntu lead to several
-problems which I had to solve.
-
-The first part was already solved - but sadly not full functional - in
-version 1.2. That was the requirement to use different sources for
-different kernel versions.
-
-With kernel 6.3 the next point was to be able to handle different
-patches on different sources.
-
-What I didn't find during testing of version 1.2:  
-For kernel 6.0 the gcc has to be a gcc-12. The new kernel uses a gcc
-feature which was introduced with gcc-12.  
-Because of that version 1.3 checks the compiler version and requests
-gcc-12 in the case that gcc is a lower version.
-
-After having that all running on Xubuntu 22.04 I decided to test it on
-Xubuntu 23.04, too. Here I struggled with the next issue.
-
-On Xubuntu 23.04 dkms compiled the patched sources and then complained
-that the new compiled version is identical to the original one and
-therefore dropped the new compiled module.
-
-After a deep dive into the dkms scripting I found that the version of
-dkms used in Xubuntu 23.04 uses modinfo to read the module version of
-the currently used module and the new compiled one. If these two
-versions are the same it denies the usage of the new one.
-
-Taking a look into the original alx sources I found that there is no
-`MODULE_VERSION` defined. It does simply not exist. And because of that
-the versions of both modules are empty strings - so they are equal.
-As the dkms version on Xubuntu doesn't do an additional check the new
-modules are never used.  
-Newer versions of dkms have this issue fixed - if they find the same
-version they do a binary comparison of the modules.
-
-I fixed that by introducing a new patch mechanism which is executed
-with each build. This patch mechanism checks all source files for the
-usage of the `MODULE_VERSION` macro. If none of the sources contains
-that macro one line with its usage is pasted at the end of `main.c`.
-The version is set to: `YYYY-MM-DD_hh:mm.ss`  
-YYYY is the current year, MM, the current month, DD the current day.  
-hh is the current hour (in 24h format), mm the current minute and ss the
-current second.
-
-If a line with that macro is found it is checked if that line contains
-my tag. If not it is just added to the original line.
-
-If my tag is already in it is exchanged by the timestamp of the
-compilation time.
-
-Doing so leads to a different version with each build.
-
-Now I thought 'that's it' - but still there was another issue.
-
-Previously I used the `REMAKE_INITRD` feature of dkms. This feature is
-not supported anymore in newer dkms versions. So again I had to find a
-solution.
-
-I introduced the script `HandleInitrd` which takes care for the correct
-usage. This script is called both during dkms install and dkms remove.
-It takes care to do the initrd update as required. Additionally it also
-checks during installation if the active module is the original kernel
-module or not. If the active module is the original module it uses
-`rmmod` to remove it and `insmod` to install the fresh compiled one.
-With this the wake on lan feature gets active during installation and
-not only after the next reboot. During `dkms remove` that script checks
-again which module is active. Now it does it the other way round: if the
-active module is not the original one it deinstalls the active module
-and installs the original again.
+- different compilers  
+  Somewhere Ubuntu switched from gcc-12 to gcc-13  
+  created a workaround in alx-wol
+- dkms system of Ubuntu 23.04 doesn't see a difference between the
+  preinstalled module and the new compiled one.  
+  Reason: alx doesn't contain a MODULE_VERSION entry.  
+  Introduced that including build date and time
+- Ubuntu uses libc 2.38 while the regular systems still contain 2.37  
+  No solution for alx-wol
+- Ubuntu 23.10 contains a change in update-initramfs which doesn't add
+  dkms compiled modules to the initramfs  
+  Up to now no solution found for alx-wol  
+  My assumption: any module which is compiled with dkms is harmed here
 
 # History
+
+**Version 1.5**
+
+Introduced support for Kernel 6.5  
+Because of a change in update-initramfs this doesn't work on Ubuntu
+23.10
 
 **Version 1.4.1**
 
