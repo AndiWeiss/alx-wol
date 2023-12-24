@@ -43,23 +43,23 @@ else
 	exit 1
 fi
 
-ubuntu=$(echo "${versionstring}" | \
-	grep -c ' (Ubuntu [^ )]* [[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\})$')
-if [ ${ubuntu} -gt 0 ];
+gcc=$(echo "${versionstring}" | \
+	grep -c "([^(]*gcc[^()]*([^()]*) [[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\},")
+if [ $gcc -eq 0 ];
 then
-	version="$(echo "${versionstring}" | \
-		sed -n '1p' | \
-		sed -n "s|^.* (Ubuntu [^ )]* \([^)]*\))$|\1|p")"
-else
-	version="$(echo "${versionstring}" | \
-		sed -n '1p' | \
-		sed -n "s|^Linux version \([[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\).*$|\1|p")"
+	echo "can't detect the used gcc version"
+	exit 1
 fi
+
+version=$(echo "${versionstring}" | \
+	grep "([^(]*gcc[^()]*([^()]*) [[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}," | \
+	sed -n '1p' | \
+	sed -n 's|^.*([^(]*gcc[^()]*([^()]*) \([[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\),.*$|\1|p')
 
 good=$(echo "${version}" | grep -c '^[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')
 if [ $good -ne 1 ];
 then
-	echo "can't detect the kernel version"
+	echo "can't detect the used gcc version"
 	exit 1
 fi
 
