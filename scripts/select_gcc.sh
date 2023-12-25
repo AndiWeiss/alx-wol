@@ -56,6 +56,7 @@ then
 	done
 fi
 
+cp "${list}.unsort" /
 sort -n "${list}.unsort" > "${list}"
 rm "${list}.unsort"
 
