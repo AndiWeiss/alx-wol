@@ -4,18 +4,20 @@
 # $1: kernel version (e.g. v6.5.13)
 # $2: file containing the files to fetch
 # $3: directory where to put them
+# $4: file to list all fetched files
 
 fetch_file="$(dirname "$0")/fetch_single_file.sh"
 export fetch_file
 fetch_dir="$(dirname "$0")/fetch_dir.sh"
 export fetch_dir
 
-if [ $# -ne 3 ];
+if [ $# -ne 4 ];
 then
 	echo "$(basename $0) expects 3 parameters:"
 	echo "first  parameter: kernel version to fetch from (eg v6.5.13)"
 	echo "second parameter: file containing the files to fetch"
 	echo "third  parameter: directory where to put them"
+	echo "fourth parameter: file to list all fetched files"
 	exit 1
 fi
 
@@ -23,6 +25,7 @@ kernver="$1"
 export kernver
 config="$2"
 writeto="$3"
+got_files="$4"
 
 if [ -f "${config}" ];
 then
@@ -39,7 +42,7 @@ fi
 
 kerneldir=$(sed -n 's|^[[:space:]]*||g;p' "${config}" | grep '^[^#].*/[[:space:]]*$')
 kerneldir=$(echo "${kerneldir}" | sed -n "s|^[[:space:]]*\(.*\)/[[:space:]]*$|\1|p")
-echo "kerneldir: >$kerneldir<"
+export kerneldir
 
 if [ ! -d "${writeto}" ];
 then
@@ -65,7 +68,7 @@ do
 				exit 1
 			fi
 		fi
-		${fetch_file} "${kerneldir}/${file}" "${writeto}/${file}"
+		${fetch_file} "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
 		if [ $? -ne 0 ];
 		then
 			exit 1
@@ -73,7 +76,7 @@ do
 		i=$(grep -c "^<html><head><title>/${kerneldir}/${file}/</title></head>$" ${writeto}/${file})
 		if [ ${i} -ne 0 ];
 		then
-			${fetch_dir} "${kerneldir}/${file}" "${writeto}/${file}"
+			"${fetch_dir}" "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
 		fi
 	fi
 done < "${config}"

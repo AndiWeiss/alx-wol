@@ -2,6 +2,7 @@
 
 file="$1"
 store="$2"
+got_files="$3"
 
 dir=$(dirname "${store}")
 if [ ! -d "${dir}" ];
@@ -24,5 +25,7 @@ then
 	rm "${store}"
 	exit 1
 fi
+
+echo "${file}" | sed -n "s|^${kerneldir}/||p" >> "${got_files}"
 
 exit 0

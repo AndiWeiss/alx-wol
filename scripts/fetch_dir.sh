@@ -2,9 +2,11 @@
 
 # first parameter: path in kernel source
 # second parameter: file containing the directory content
+# third parameter: list files here
 
 src="$1"
 list="$2"
+got_files="$3"
 
 if [ ! -f "${list}" ];
 then
@@ -41,9 +43,15 @@ do
 			#echo "file:      >${file}<"
 		fi
 		wget -nv -O ${list}/$(basename ${file}) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/${file}?h=${kernver}
+		if [ $? -ne 0 ];
+		then
+			exit 1
+		fi
 		if [ ${i} -ne 0 ];
 		then
-			${fetch_dir} ${file} ${list}/$(basename ${file})
+			"${fetch_dir}" "${file}" "${list}/$(basename ${file})" "${got_files}"
+		else
+			echo "${file}" | sed -n "s|^${kerneldir}/||p" >> "${got_files}"
 		fi
 	fi
 done < "${list}.handle_this"

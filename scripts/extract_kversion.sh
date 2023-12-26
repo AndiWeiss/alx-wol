@@ -1,36 +1,55 @@
 #!/bin/sh
 
-# first parameter: kernel file
-# second parameter: path to matching kernel headers
-# third parameter: path to temp dir
-# fourth parameter: file to create
+# first parameter: file containing kernel version string
+# second parameter: where to put the gcc version
 
-kernel="$1"
-headers="$2"
-temp="$3"
-versionfile="$4"
+in="$1"
+out="$2"
 
-mkdir -p "${temp}"
-if [ $? -ne 0 ];
+if [ ! -f "${out}" ];
 then
-	echo "asn't able to create ${temp}"
-	exit 1
-fi
+	if [ ! -f "${in}" ];
+	then
+		echo "can't access $in"
+		exit 1
+	fi
+	versionstring=$(cat "${in}")
 
-"${headers}/scripts/extract-vmlinux" "${kernel}" > "${temp}/vmlinux"
-if [ $? -ne 0 ];
-then
-	echo "${kernel} seems not to be a vmlinuz file"
-	exit 1
-fi
+	kernel=$(echo "${versionstring}" | \
+		grep ' [[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\})$')
 
-vmlinux="${temp}/vmlinux"
+	if [ $kernel -eq 0 ];
+	then
+		echo "can't detect the kernel version"
+		exit 1
+	fi
 
-strings "${vmlinux}" | grep '^Linux version ' > "${versionfile}"
+	version=$(echo "${versionstring}" | \
+		grep ' [[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\})$' | \
+		sed -n '1p' | \
+		sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\))$|\1|p')
 
-i=$(grep -c '^Linux version ' "${versionfile}")
-if [ $i -eq 0 ];
-then
-	echo "${vmlinux} seems not to be a vmlinux file"
-	exit 1
+	good=$(echo "${version}" | grep -c '^[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')
+	if [ $good -ne 1 ];
+	then
+		echo "can't detect the kernel version"
+		exit 1
+	fi
+
+	if [ ! -d "$(dirname "${out}")" ];
+	then
+		mkdir -p "$(dirname "${out}")"
+		if [ $? -ne 0 ];
+		then
+			echo "wasn't able to create $(dirname "${out}")"
+			exit 1
+		fi
+	fi
+
+	echo "${version}" > ${out}
+	if [ $? -ne 0 ];
+	then
+		echo "wasn't able to create §{out}"
+		exit 1
+	fi
 fi

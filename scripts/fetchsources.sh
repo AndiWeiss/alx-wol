@@ -2,44 +2,28 @@
 
 log_it()
 {
-	echo "$*" >> /log.txt
+	echo "$*"
 }
 
-temp=$(realpath "../temp")
-
-log_it "----------------------------------"
-log_it "PWD:		$PWD"
-log_it "module:		$module"
-log_it "arch:		$arch"
-log_it "module_version:	$module_version"
-log_it "kernelver:	$kernelver"
-log_it "	-------"
-log_it "temp:		$temp"
-
-extract_kversion="$(dirname "$0")/extract_kversion.sh"
-detect_kversion="$(dirname "$0")/detect_kernelversion.sh"
 fetch_sources="$(dirname "$0")/fetch_kernelparts.sh"
+patch_sources="$(dirname "$0")/patch_sources.sh"
 
-headers="/usr/src/linux-headers-${kernelver}"
-kernel="/boot/vmlinuz-${kernelver}"
+file_list="${PWD}/.fetched_files"
 
-#"${extract_kversion}" "${kernel}" "${headers}" "${temp}" "${temp}/kernel_version"
-#if [ $? -ne 0 ];
-#then
-#	log_it "extract_kversion failed"
-#	exit 1
-#fi
+kernel_version=$(cat "${PWD}/${kernelver}/kernel_version")
 
-version=$("${detect_kversion}" "${temp}/kernel_version")
+truncate -s 0 "${file_list}"
+
+"${fetch_sources}" "v${kernel_version}" "${PWD}/sources.txt" "${PWD}" "${file_list}"
 if [ $? -ne 0 ];
 then
-	log_it "detect_kversion failed"
+	log_it "$(basename "${fetch_sources}") failed"
 	exit 1
 fi
 
-"${fetch_sources}" "v${version}" "${PWD}/sources.txt" "${PWD}"
+"${patch_sources}" "${PWD}" "${PWD}/sources.txt" "${file_list}"
 if [ $? -ne 0 ];
 then
-	log_it "fetch_sources failed"
+	log_it "$(basename "${patch_sources}") failed"
 	exit 1
 fi

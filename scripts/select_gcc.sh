@@ -7,13 +7,14 @@
 
 if [ $# -lt 3 ];
 then
-	echo "$(basename $0 requires at least 3 parameters)"
+	# echo "$(basename $0 requires at least 3 parameters)"
 	exit 1
 fi
-	
+
 arch="$1"
 temp="$2"
 req="$3"
+add="$4"
 
 list="${temp}/available_gcc"
 
@@ -39,9 +40,9 @@ do
 	fi
 done
 
-if [ $# -gt 3 ] && [ -f "$4" ];
+if [ $# -gt 3 ] && [ -f "${add}" ];
 then
-	for exe in $(cat "$4")
+	for exe in $(cat "${add}")
 	do
 		if [ -f "${exe}" ] && [ -x "${exe}" ];
 		then
@@ -63,7 +64,7 @@ rm "${list}.unsort"
 i=$(echo "${req}" | grep -c '^[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}$')
 if [ $i -eq 0 ];
 then
-	echo "requested version has to be number.number.number"
+	# echo "requested version has to be number.number.number"
 	exit 1
 fi
 
