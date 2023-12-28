@@ -1,12 +1,9 @@
-# lines with hash as first character are comments 		 
-
-# line ends with a slash
-# --> use this directory as base
-# There must be exact one line in this file ending with a slash
-drivers/net/ethernet/atheros/
-
-# any following line without hash at the beginning:
-# a file inside that directory
-# may also be a file in a directory
-# MUST NOT end with a slash!
+[kernel 6.2.16]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
 alx
+[patches]
+patches/alx-wol6.2.16.patch
+[versionpatch]
+alx/main.c

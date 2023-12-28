@@ -14,14 +14,14 @@ kernel_version=$(cat "${PWD}/${kernelver}/kernel_version")
 
 truncate -s 0 "${file_list}"
 
-"${fetch_sources}" "v${kernel_version}" "${PWD}/sources.txt" "${PWD}" "${file_list}"
+"${fetch_sources}" "${kernel_version}" "${PWD}/sources.txt" "${PWD}" "${file_list}"
 if [ $? -ne 0 ];
 then
 	log_it "$(basename "${fetch_sources}") failed"
 	exit 1
 fi
 
-"${patch_sources}" "${PWD}" "${PWD}/sources.txt" "${file_list}"
+"${patch_sources}" "${kernel_version}" "${PWD}/sources.txt" "${PWD}" "${file_list}"
 if [ $? -ne 0 ];
 then
 	log_it "$(basename "${patch_sources}") failed"

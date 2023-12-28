@@ -16,7 +16,7 @@ then
 	versionstring=$(cat "${in}")
 
 	kernel=$(echo "${versionstring}" | \
-		grep ' [[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\})$')
+		grep -c ' [[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\})$')
 
 	if [ $kernel -eq 0 ];
 	then
