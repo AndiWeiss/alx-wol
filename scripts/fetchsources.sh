@@ -10,7 +10,7 @@ patch_sources="$(dirname "$0")/patch_sources.sh"
 
 file_list="${PWD}/.fetched_files"
 
-kernel_version=$(cat "${PWD}/${kernelver}/kernel_version")
+kernel_version=$(cat "${PWD}/../${kernelver}/kernel_version")
 
 truncate -s 0 "${file_list}"
 

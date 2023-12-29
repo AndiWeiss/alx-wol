@@ -1,1 +1,1 @@
-obj-m		+= alx/
+obj-$(CONFIG_ALX)	+= alx/

@@ -46,11 +46,11 @@ version_patch ()
 		then
 			# date and time already included
 			# replace it
-			cat "${file2patch}${patchext}" | sed -n "s|^\([[:space:]]*MODULE_VERSION[[:space:]]*([^)]*\)[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}_[0-9]\{2\}:[0-9]\{2\}.[0-9]\{2\}\(.*\)$|\1${insert}\2|g;p"
+			cat "${file2patch}${patchext}" | sed -n "s|^\([[:space:]]*MODULE_VERSION[[:space:]]*([^)]*\)[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}_[0-9]\{2\}:[0-9]\{2\}.[0-9]\{2\}\(.*\)$|\1${insert}\2|g;p" >> "${file2patch}"
 		else
 			# date and time not yet included
 			# add it behind the original version string
-			cat "${file2patch}${patchext}" | sed -n "s|^\([[:space:]]*MODULE_VERSION[[:space:]]*([^)]*\)\().*\)$|\1 \"${insert}\"\2|g;p"
+			cat "${file2patch}${patchext}" | sed -n "s|^\([[:space:]]*MODULE_VERSION[[:space:]]*([^)]*\)\().*\)$|\1 \"-${insert}\"\2|g;p" >> "${file2patch}"
 		fi
 		rm "${file2patch}${patchext}"
 	fi
@@ -66,6 +66,10 @@ while [ $cur -lt $end ];
 do
 	cur=$(expr $cur + 1)
 	line="$(echo "${all_patches}" | sed -n "${cur}p")"
+	if [ "${line}" = "" ];
+	then
+		continue
+	fi
 	file="$(realpath -s "${line}")"
 	if [ ! -f "${file}" ];
 	then
@@ -96,6 +100,10 @@ while [ $cur -lt $end ];
 do
 	cur=$(expr $cur + 1)
 	line="$(echo "${all_versionfiles}" | sed -n "${cur}p")"
+	if [ "${line}" = "" ];
+	then
+		continue
+	fi
 	file="$(realpath -s "${line}")"
 	if [ ! -f "${file}" ];
 	then

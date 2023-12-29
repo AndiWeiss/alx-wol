@@ -1,20 +1,17 @@
 #!/bin/sh
 
-log_it()
-{
-	echo "$*" >> /log.txt
-}
+echo "XXXXXXXXXXXXXX $(basename "$0") started >$*< XXXXXXXXXXXXXX"
+i="$(grep '^[[:space:]]*BUILT_MODULE_NAME[[:space:]]*\[[0-9]\{1,\}\][[:space:]]*=' dkms.conf)"
+all_names="$(echo "$i" | sed -n 's|^[^"]*"\([^"]*\).*$|\1|gp')"
+echo "all_names: >>>>$all_names<<<<"
 
-log_it "XXXXXXXXXXXXXX $0 started >$*< XXXXXXXXXXXXXX"
+cur=0
+end=$(echo "$all_names" | wc -l)
+while [ $cur -lt $end ];
+do
+	cur=$(expr $cur + 1)
+	name="$(echo "$all_names" | sed -n "${cur}p")"
+	echo "test: >$name<"
+done
 
-temp="$(realpath -s "${PWD}/../temp")"
-
-module_name="$(cat "${temp}/module_name")"
-
-mod_available=$(lsmod | grep -c "^${module_name}")
-if [ $mod_available -ne 0 ];
-then
-	echo "XXXXXXXXXX austauschen XXXXXXXXXXXXXXXXX"
-else
-	echo "XXXXXXXXXX nicht geladen XXXXXXXXXXXXXXXXX"
-fi
+echo "XXXXXXXXXXXXXX $(basename "$0") exit XXXXXXXXXXXXXX"
