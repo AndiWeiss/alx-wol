@@ -1,9 +1,71 @@
-[kernel 6.2.16]
+# last tested: 6.6.8
+
+[kernel 5.15.1]
 [kerneldir]
 drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol6.2.16.patch
+patches/alx-wol_5.15.1.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.15.75]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_5.15.75.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.16.1]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_5.16.1.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.19.17]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_5.15.75.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.0]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_6.0.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.0.3]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_6.0.3.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.3]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_6.3.patch
 [versionpatch]
 alx/main.c

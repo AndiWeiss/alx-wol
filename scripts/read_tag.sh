@@ -1,6 +1,6 @@
 #!/bin/sh
-#!/bin/sh
 
+#req_version="$(echo "$1" | sed -n 's|^\([0-9]\{1,\}\.[0-9]\{1,\}\)\.0$|\1|;p')"
 req_version="$1"
 tag="$2"
 single="$3"
@@ -36,6 +36,7 @@ scandir=0
 
 cur=0
 matching=0
+start=1
 end=-1
 while read line;
 do
@@ -50,6 +51,10 @@ do
 				end=$cur
 			fi
 			chk_version=$(echo "${line}" | sed -n 's|^[[:space:]]*\[kernel[[:space:]]*\([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\)[[:space:]]*\][[:space:]]*$|\1|p')
+			if [ "$chk_version" = "" ];
+			then
+				chk_version=$(echo "${line}" | sed -n 's|^[[:space:]]*\[kernel[[:space:]]*\([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\)[[:space:]]*\][[:space:]]*$|\1.0|p')
+			fi
 			res=$(compare "${chk_version}" "${req_version}")
 			if [ $res -eq 0 ];
 			then
@@ -81,7 +86,7 @@ do
 		fi
 	fi
 done < "${config_file}"
-if [ $end -lt 0 ];
+if [ $end -lt 0 ] || [ $end -eq $start ];
 then
 	end=$cur
 fi
