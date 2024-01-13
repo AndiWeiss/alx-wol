@@ -10,6 +10,9 @@ headers="$2"
 temp="$3"
 versionfile="$4"
 
+major=$(echo "${kernelver}" | sed -n 's|^\([0-9]\{1,\}\).*$|\1|p')
+minor=$(echo "${kernelver}" | sed -n 's|^[0-9]\{1,\}\.\([0-9]\{1,\}\).*$|\1|p')
+
 if [ ! -d "${temp}" ];
 then
 	mkdir -p "${temp}"
@@ -31,9 +34,9 @@ then
 
 	vmlinux="${temp}/vmlinux"
 
-	strings "${vmlinux}" | grep '^Linux version ' > "${versionfile}"
+	strings "${vmlinux}" | grep "^Linux version $major\.$minor" > "${versionfile}"
 
-	i=$(grep -c '^Linux version ' "${versionfile}")
+	i=$(grep -c "^Linux version $major\.$minor" "${versionfile}")
 	if [ $i -eq 0 ];
 	then
 		echo "${vmlinux} seems not to be a vmlinux file"
