@@ -19,7 +19,8 @@ then
 	rm -rf "${store}"
 fi
 
-wget -nv -O "${store}" https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/${file}?h=v${kernver}
+ldv="v$(echo ${kernver} | sed -n 's|^\([0-9]\{1,\}\.[0-9]\{1,\}\)\.0$|\1|;p')"
+wget -nv -O "${store}" https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/${file}?h=${ldv}
 if [ $? -ne 0 ];
 then
 	rm "${store}"

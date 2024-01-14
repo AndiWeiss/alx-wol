@@ -26,23 +26,25 @@ then
 	exit 1
 fi
 
+ldv="v$(echo ${kernver} | sed -n 's|^\([0-9]\{1,\}\.[0-9]\{1,\}\)\.0$|\1|;p')"
+
 while read line
 do
-	i=$(echo "${line}" | grep -c "/${src}/.*?h=v${kernver}'")
+	i=$(echo "${line}" | grep -c "/${src}/.*?h=${ldv}'")
 	if [ ${i} -ne 0 ];
 	then
-		i=$(echo "${line}" | grep -c "/${src}/.*/?h=v${kernver}'")
+		i=$(echo "${line}" | grep -c "/${src}/.*/?h=${ldv}'")
 		if [ ${i} -ne 0 ];
 		then
 			# directory
-			file=$(echo "${line}" | sed -n "s|^.*/\(${src}/.*\)/?h=v${kernver}.*$|\1|p")
+			file=$(echo "${line}" | sed -n "s|^.*/\(${src}/.*\)/?h=${ldv}.*$|\1|p")
 			#echo "directory: >${file}<"
 		else
 			#file
-			file=$(echo "${line}" | sed -n "s|^.*/\(${src}/.*\)?h=v${kernver}.*$|\1|p")
+			file=$(echo "${line}" | sed -n "s|^.*/\(${src}/.*\)?h=${ldv}.*$|\1|p")
 			#echo "file:      >${file}<"
 		fi
-		wget -nv -O ${list}/$(basename ${file}) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/${file}?h=v${kernver}
+		wget -nv -O ${list}/$(basename ${file}) https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/${file}?h=${ldv}
 		if [ $? -ne 0 ];
 		then
 			exit 1

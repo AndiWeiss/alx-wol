@@ -20,13 +20,13 @@ patches/alx-wol_5.15.75.patch
 [versionpatch]
 alx/main.c
 
-[kernel 5.16.1]
+[kernel 5.16]
 [kerneldir]
 drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_5.16.1.patch
+patches/alx-wol_5.16.patch
 [versionpatch]
 alx/main.c
 
