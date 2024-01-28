@@ -50,6 +50,15 @@ then
 	fi
 fi
 
+# install the update-initramfs hook
+if [ -d /etc/initramfs-tools/hooks ];
+then
+	cp dkms-adder /etc/initramfs-tools/hooks
+else
+	echo "/etc/initramfs-tools/hooks doesn't exist"
+	echo "continue installation, update of initramfs may fail"
+fi
+
 if [ -d "/usr/src/${this_name}-${this_version}" ];
 then
 	rm -rf "/usr/src/${this_name}-${this_version}"
