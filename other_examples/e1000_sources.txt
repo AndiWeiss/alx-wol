@@ -1,0 +1,8 @@
+[kernel 6.2.16]
+[kerneldir]
+drivers/net/ethernet/intel
+[files]
+e1000
+[patches]
+[versionpatch]
+e1000/e1000_main.c
