@@ -1,5 +1,3 @@
-# last tested: 6.6.8
-
 [kernel 5.15.1]
 [kerneldir]
 drivers/net/ethernet/atheros

@@ -18,28 +18,38 @@ add="$4"
 
 list="${temp}/available_gcc"
 
+# create file for available compiler list
 mkdir -p "${temp}"
 truncate -s 0 "${list}.unsort"
 
 get_version ()
 {
+	# extract the version information out of 'gcc --version'
+	# take the three digit version at the end of the line
 	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\)$|\1|p'
 }
 
+# ask all files which may be a gcc for the version
 for exe in $(ls /usr/bin/${arch}*gcc*)
 do
+	# check for: file, no link, executable
 	if [ -f "${exe}" ] && [ ! -L "${exe}" ] && [ -x "${exe}" ];
 	then
+		# ask for version
 		versionstring="$(${exe} --version | \
 			grep 'gcc.*[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')"
+
+		# and extract it if requirements are fulfilled
 		if [ "${versionstring}" != "" ];
 		then
 			version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
+			# write the version in a temp file
 			echo "$version ${exe}" >> "${list}.unsort"
 		fi
 	fi
 done
 
+# do the same for the compiler mentioned in the given file
 if [ $# -gt 3 ] && [ -f "${add}" ];
 then
 	for exe in $(cat "${add}")
@@ -57,10 +67,11 @@ then
 	done
 fi
 
-cp "${list}.unsort" /
+# sort the list of compilers
 sort -n "${list}.unsort" > "${list}"
 rm "${list}.unsort"
 
+# check if version request is valid
 i=$(echo "${req}" | grep -c '^[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}$')
 if [ $i -eq 0 ];
 then
@@ -68,10 +79,12 @@ then
 	exit 1
 fi
 
+# get requested version as single numbers
 req_major=$(echo "${req}" | sed -n 's|^\([[:digit:]]\{1,\}\)\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}$|\1|p')
 req_minor=$(echo "${req}" | sed -n 's|^[[:digit:]]\{1,\}\.\([[:digit:]]\{1,\}\)\.[[:digit:]]\{1,\}$|\1|p')
 req_patch=$(echo "${req}" | sed -n 's|^[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.\([[:digit:]]\{1,\}\)$|\1|p')
 
+# and search the best matching executable
 use=""
 while read line;
 do

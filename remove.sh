@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# install the dkms system for this module
+# remove the dkms system for this module
 # which module is defined in dkms.conf
 # the required config is done in sources.txt
 
@@ -39,7 +39,7 @@ installed="$(dkms status | grep "^${this_name}/")"
 if [ "${installed}" != "" ];
 then
 	# yes, ask if they shall be removed
-	echo "found other versions of ${this_name} installed"
+	echo "found versions of ${this_name} installed"
 	doit="N"
 	echo -n "	shall they all be removed [y/N]? "
 	read doit
@@ -72,66 +72,8 @@ then
 	fi
 fi
 
-# install the update-initramfs hook
-if [ -d /etc/initramfs-tools/hooks ];
+# remove the update-initramfs hook
+if [ -d /etc/initramfs-tools/hooks ] && [ -f /etc/initramfs-tools/hooks/dkms-adder ];
 then
-	# this is mandatory for ubuntu 23.x
-	# otherwise the module will not be installed in the initrd
-	# we don't care if there is already a hook file!
-	cp dkms-adder /etc/initramfs-tools/hooks
-else
-	# if the hook directory is not available we don't
-	# know how to continue ...
-	# the dkms system wil be functional, but it may happen that the
-	# module isn't included in the initrd.
-	echo "/etc/initramfs-tools/hooks doesn't exist"
-	echo "continue installation, update of initramfs may fail"
-fi
-
-if [ -d "/usr/src/${this_name}-${this_version}" ];
-then
-	# if the same version of this package is already installed
-	# we replace it
-	rm -rf "/usr/src/${this_name}-${this_version}"
-fi
-
-# (re)create the source directory
-mkdir "/usr/src/${this_name}-${this_version}"
-
-# get all files of this package
-all_files="$(ls)"
-
-# copy all file except the Readme and the examples into the source
-# directory
-i=0
-last=$(echo "${all_files}" | wc -l)
-while [ $i -lt $last ];
-do
-	i=$(expr $i + 1)
-	file="$(echo "${all_files}" | sed -n "${i}p")"
-	if [ "${file}" != "${script}" ] \
-		&& [ "${file}" != "README.md" ] \
-		&& [ "${file}" != "kernelpatching.md" ] \
-		&& [ "${file}" != "other_examples" ];
-	then
-		cp -r "${file}" "/usr/src/${this_name}-${this_version}/"
-	fi
-done
-
-# take care that there is a dkms.conf
-if [ -f "/usr/src/${this_name}-${this_version}/dkms.conf" ];
-then
-	# and set the correct access rights
-	sudo chmod 644 "/usr/src/${this_name}-${this_version}/dkms.conf"
-else
-	echo "didn't find dkms.conf"
-fi
-
-# install the module
-dkms install -m "${this_name}" -v "${this_version}"
-if [ $? -eq 0 ];
-then
-	echo "#### installation of ${this_name} version ${this_version} succeeded ####"
-else
-	echo "#### FAILED installation of ${this_name} version ${this_version} ####"
+	rm /etc/initramfs-tools/hooks/dkms-adder
 fi
