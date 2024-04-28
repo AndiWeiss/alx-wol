@@ -6,6 +6,7 @@
 # first parameter: file containing kernel version string
 # second parameter: where to put the gcc version
 
+scriptpath="$(dirname $0)"
 in="$1"
 out="$2"
 
@@ -20,38 +21,29 @@ then
 	if [ ! -f "${in}" ];
 	then
 		# no, exit with error
-		echo "can't access $in"
+		echo "$(basename $0): can't access $in" >&2
 		exit 1
 	fi
 
-	# get the content of the infile as version string
-	versionstring=$(cat "${in}")
-
-	# check if there is something like 'gcc... 123.456.789'
-	# each version number may have 1 to 3 digits
-	# and there have to be three numbers
-	gcc=$(echo "${versionstring}" | \
-		grep -c "([^(]*gcc[^()]*([^()]*) [[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\},")
-	if [ $gcc -eq 0 ];
+	# now try to identify the kernel provider
+	if [ $(grep -c "Ubuntu" "${in}") -ne 0 ];
 	then
-		# no matching string found
+		# ubuntu kernel
+		version=$(${scriptpath}/Ubuntu.sh "${in}" "gcc")
+	elif [ $(grep -c "Debian" "${in}") -ne 0 ];
+	then
+		# Debian kernel
+		version=$(${scriptpath}/Debian.sh "${in}" "gcc")
+	else
+		# wasn't able to detect the kernel creator
 		# exit with error
-		echo "can't detect the used gcc version"
+		echo "$(basename $0): can't detect the kernel creator" >&2
 		exit 1
 	fi
 
-	# matching string found, extract version number
-	version=$(echo "${versionstring}" | \
-		grep "([^(]*gcc[^()]*([^()]*) [[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}," | \
-		sed -n '1p' | \
-		sed -n 's|^.*([^(]*gcc[^()]*([^()]*) \([[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\),.*$|\1|p')
-
-	# and check if the result is a valid version number
-	good=$(echo "${version}" | grep -c '^[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')
-	if [ $good -ne 1 ];
+	if [ $? -ne 0 ];
 	then
-		# it's not, exit with error
-		echo "can't detect the used gcc version"
+		echo "$(basename $0): wasn't able to get gcc version used" >&2
 		exit 1
 	fi
 
@@ -64,7 +56,7 @@ then
 		then
 			# problem on creating the directory
 			# exit with error
-			echo "wasn't able to create $(dirname "${out}")"
+			echo "$(basename $0): wasn't able to create $(dirname "${out}")" >&2
 			exit 1
 		fi
 	fi
@@ -75,7 +67,9 @@ then
 	then
 		# error on file creation
 		# exit with error
-		echo "wasn't able to create §{out}"
+		echo "$(basename $0): wasn't able to create §{out}" >&2
 		exit 1
 	fi
+
+	echo "#### kernel was compiled with gcc ${version} ####" >&2
 fi

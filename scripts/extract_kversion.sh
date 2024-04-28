@@ -9,6 +9,7 @@
 # first parameter: file containing kernel version string
 # second parameter: where to put the gcc version
 
+scriptpath="$(dirname $0)"
 in="$1"
 out="$2"
 
@@ -28,29 +29,29 @@ then
 	if [ ! -f "${in}" ];
 	then
 		# no, exit with error
-		echo "can't access $in"
+		echo "$(basename $0): can't access $in" >&2
 		exit 1
 	fi
 
-	# now try to identify the patch level
-	if [ $(grep -c " $major\.$minor\.[0-9]\{1,\})$" "${in}") -ne 0 ];
+	# now try to identify the kernel provider
+	if [ $(grep -c "Ubuntu" "${in}") -ne 0 ];
 	then
-		# regular ubuntu kernel
-		# contains e.g.
-		# (Ubuntu 6.2.0-39.40~22.04.1-generic 6.2.16)
-		# at the end of the version string
-		version=$(cat "${in}" | sed -n "s|^.* \($major\.$minor\.[0-9]\{1,\}\))$|\1|p")
-	elif [ $(grep -c "Linux version $major\.$minor\.[0-9]\{1,\}.*$" "${in}") -ne 0 ];
+		# ubuntu kernel
+		version=$(${scriptpath}/Ubuntu.sh "${in}" "kernel")
+	elif [ $(grep -c "Debian" "${in}") -ne 0 ];
 	then
-		# ubuntu kernel from
-		# https://kernel.ubuntu.com/mainline/
-		# seems to always start with
-		# Linux version 5.19.16-051916-generic
-		version=$(cat "${in}" | sed -n "s|^Linux version \($major\.$minor\.[0-9]\{1,\}\).*$|\1|p")
+		# Debian kernel
+		version=$(${scriptpath}/Debian.sh "${in}" "kernel")
 	else
-		# wasn't able to detect the kernel version
+		# wasn't able to detect the kernel creator
 		# exit with error
-		echo "can't detect the kernel version"
+		echo "$(basename $0): can't detect the kernel creator" >&2
+		exit 1
+	fi
+
+	if [ $? -ne 0 ];
+	then
+		echo "$(basename $0): wasn't able to get kernel version" >&2
 		exit 1
 	fi
 
@@ -62,7 +63,7 @@ then
 		if [ $? -ne 0 ];
 		then
 			# creation failed, exit with error
-			echo "wasn't able to create $(dirname "${out}")"
+			echo "$(basename $0): wasn't able to create $(dirname "${out}")" >&2
 			exit 1
 		fi
 	fi
@@ -72,7 +73,9 @@ then
 	if [ $? -ne 0 ];
 	then
 		# write failed, exit with error
-		echo "wasn't able to create ${out}"
+		echo "$(basename $0): wasn't able to create ${out}" >&2
 		exit 1
 	fi
+
+	echo "#### using kernel version $(echo "${version}" | sed -n '1p') ####" >&2
 fi

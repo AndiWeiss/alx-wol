@@ -126,12 +126,22 @@ uncompressed linux kernel. The uncompressed kernel contains a lot of
 strings - one of them contains the kernel version.
 
 The script `extract_kversion_string.sh` first extracts the kernel and
-then the version string out of the uncompressed kernel.
+then the version string out of the uncompressed kernel. Since alx-wol 
+version 2.1 it first checks if the required kernel script `extract-vmlinux` 
+is available in the kernel headers.  
+If it is not available it is fetched from kernel.org based on the
+version of the currently running kernel.
 
 The script `extract_kversion.sh` uses the kernel version string to
-get the kernel version. The current script is able to handle two
-different version string formats found in Ubuntu kernels: the one of a
-regular update and the one of mainline ppa kernels.
+get the kernel version. This is a wrapper for distribution dependent
+scripts. Currently there are scripts for Ubuntu and Debian.
+
+The script `Ubuntu.sh` is able to handle two different version string 
+formats found in Ubuntu kernels: the one of a regular update and the 
+one of mainline ppa kernels. This script expects two parameters. The
+First parameter is the file containing the complete kernel version 
+string. The second parameter has to be either kernel or gcc to tell
+what to extract.
 
 Regular Ubuntu kernels contain a string like this (in one line):  
 `Linux version 6.5.0-14-generic (buildd@lcy02-amd64-110)`  
@@ -156,11 +166,26 @@ Having that in mind leads to:
   take that one
 - if none of these possibilities was found we can't proceed
 
-If this mechanism doesn't fit to users needs the script
-`extract_kversion.sh` can be adapted to get the required result.
+The script `Debian.sh` is able to handle two different version string 
+formats found in Ubuntu kernels: the one of a regular update and the 
+one of mainline ppa kernels. This script expects two parameters. The
+First parameter is the file containing the complete kernel version 
+string. The second parameter has to be either kernel or gcc to tell
+what to extract.
+
+Debian kernel string example:  
+`Linux version 6.1.0-18-amd64 (debian-kernel@lists.debian.org)`  
+`(gcc-12 (Debian 12.2.0-14) 12.2.2, GNU ld (GNU Binutils for Debian) 2.40)`  
+`# SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01)`
+
+If none of these mechanisms fulfills the requirements one can add 
+another custom kernel version into `extract_kversion.sh` and create an
+additonal extraction script.
 
 The same version string is used to get the gcc version used to compile
-the kernel. This is done in `gcc_used.sh`.
+the kernel. This is done in `gcc_used.sh`. That script is another 
+wrapper around the extraction scripts. Extracting the gcc version used
+is identical for Ubuntu and Debian.
 
 This script searches mainly for a three digit version followed by a
 comma.  

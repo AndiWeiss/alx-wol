@@ -7,7 +7,7 @@
 
 if [ $# -lt 3 ];
 then
-	# echo "$(basename $0 requires at least 3 parameters)"
+	echo "$(basename $0) requires at least 3 parameters" >&2
 	exit 1
 fi
 
@@ -75,7 +75,7 @@ rm "${list}.unsort"
 i=$(echo "${req}" | grep -c '^[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}$')
 if [ $i -eq 0 ];
 then
-	# echo "requested version has to be number.number.number"
+	echo "$(basename $0): requested version has to be number.number.number" >&2
 	exit 1
 fi
 
@@ -115,4 +115,5 @@ done < "${list}"
 
 rm "${list}"
 
+echo "#### using ${use} to compile module ####" >&2
 echo "${use}"

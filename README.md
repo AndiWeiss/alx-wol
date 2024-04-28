@@ -10,6 +10,10 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+Since version 2.1 alx-wol is prepared for an easy adaption to other 
+distributions than Ubuntu.  
+First implemented is Debian.
+
 Since version 2.0 of alx-wol this can not only be used to get alx
 driver with wake on lan working.
 
@@ -51,11 +55,13 @@ two more examples which can be found in 'other_examples'.
 
 ## Compatibility
 
-alx-wol has been tested on Ubuntu 22.04 and 23.10. With regular kernel
-updates delieverd by Ubuntu the system works pretty nice. Also the
-kernels which can be downloaded from
+alx-wol has been tested on Ubuntu 22.04, 23.10 and 24.04. With regular 
+kernel updates delieverd by Ubuntu the system works pretty nice. Also 
+the kernels which can be downloaded from
 [Mainline Kernel PPA](https://kernel.ubuntu.com/~kernel-ppa/mainline/)
 work fine.
+
+A short test has been executed on Debian 12 "bookworm".
 
 In case of self compiled kernels one has to take care that the version
 strings follow one of the Ubuntu ways.
@@ -175,12 +181,25 @@ effort in alx-wol:
   mkinitramfs  
   This hook installs **all** dkms build modules into the initramfs
 
+## issue found in Debian
+
+When installing the required kernel header the script `extract-vmlinux`
+of the kernel sources is not installed. Because of that the script 
+`extract_kversion_string.sh` first checks if the script is available 
+and if not downloads and uses the one matching the currently running 
+kernel.
+
 # documentation for the generic dkms mechanism
 
 The new generic kernel module patch mechanism is explained
 [here](kernelpatching.md)
 
 # History
+
+**Version 2.1**
+
+Introduction of mechanism to integrate other distributions than Ubuntu.
+First other distribution implemented: Debian.
 
 **Version 2.0**
 
