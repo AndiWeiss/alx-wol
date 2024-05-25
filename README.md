@@ -10,6 +10,17 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+Since Version 2.1.1 a first try of support for Proxmox is added.
+There are some issues with the Proxmox system. On Debian and Ubuntu
+when installing dkms the package `build-essential` gets installed.
+This package installs the required linux headers, too.
+On Proxmox Virtual Environment V8.2 this is not the case.
+At least the headers for the currently running kernel are not installed.
+
+If you want to use alx-wol on Proxmox please install the package
+`proxmox-default-headers` and execute a reboot before doing the
+alx-wol installation.
+
 Since version 2.1 alx-wol is prepared for an easy adaption to other 
 distributions than Ubuntu.  
 First implemented is Debian.
@@ -26,7 +37,7 @@ use with which kernel version. The sources are patched. The system tries
 to find the optimal compiler for the module and builds with it. After
 that the initramf is updated to provide the new kernel module.
 
-## Where does it come from
+## Where it comes from
 
 I was using an Ubuntu 20.04 on a home server containing the Atheros
 ethernet chip. I configured it for Wake On Lan a long time ago and with
@@ -62,6 +73,11 @@ the kernels which can be downloaded from
 work fine.
 
 A short test has been executed on Debian 12 "bookworm".
+
+Now another short test has been done on Proxmox Virtual Environment
+V8.2. Please be careful with the linux header installation. I can't say
+if these are always done during installation of a new kernel. If not
+the alx build will fail and you don't have wake on lan.
 
 In case of self compiled kernels one has to take care that the version
 strings follow one of the Ubuntu ways.

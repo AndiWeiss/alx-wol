@@ -25,6 +25,102 @@ then
 	exit 1
 fi
 
+# check if a compiler is available
+if [ "$(which gcc)" = "" ];
+then
+	# no gcc available
+	echo "$(basename $0): it seems there is no gcc available" >&2
+	echo "gcc is required for building modules" >&2
+	exit 1
+fi
+
+# the following part checks if the required information
+# (kernel version and used gcc version) can be extracted
+# from the running kernel
+temp=.temp
+export kernelver=$(uname -r)
+kernel="/boot/vmlinuz-${kernelver}"
+major=$(uname -r | sed -n 's|^\([0-9]\+\)\..*$|\1|g;p')
+minor=$(uname -r | sed -n 's|^[0-9]\+\.\([0-9]\+\)\..*$|\1|g;p')
+versionstringfile=${temp}/kernel_version_string
+versionfile=${temp}/kernel_version
+gccversionfile=${temp}/gcc_used
+
+if [ -d "${temp}" ];
+then
+	rm -rf "${temp}"
+fi
+mkdir ${temp}
+
+wget -nv -O "${temp}/extract-vmlinux" https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/scripts/extract-vmlinux?h=v$(uname -r | sed -n 's|\.[^.]*$||p')
+if [ $? -ne 0 ];
+then
+	# exit if it can't be fetched
+	echo "$(basename $0): no extract-vmlinux available" >&2
+	exit 1
+else
+	# use it
+	chmod +x "${temp}/extract-vmlinux"
+	"${temp}/extract-vmlinux" "${kernel}" > "${temp}/vmlinux"
+fi
+if [ $? -ne 0 ];
+then
+	# extraction failed, exit with error
+	echo "$(basename $0): ${kernel} seems not to be a vmlinuz file" >&2
+	exit 1
+fi
+
+# now we have the uncompressed vmlinux file
+vmlinux="${temp}/vmlinux"
+
+# search for a sensefull string in the file
+strings "${vmlinux}" | grep "^Linux version $major\.$minor" > "${versionstringfile}"
+
+# check if the file contains a sensefull version string
+i=$(grep -c "^Linux version $major\.$minor" "${versionstringfile}")
+if [ $i -eq 0 ];
+then
+	# no, exit with error
+	echo "$(basename $0): ${vmlinux} seems not to be a vmlinux file" >&2
+	rm "${versionstringfile}"
+	exit 1
+fi
+
+# extract the kernel version
+./scripts/extract_kversion.sh "${versionstringfile}" "${versionfile}"
+if [ $i -eq 0 ];
+then
+	# failed, exit with error
+	echo "$(basename $0): ${vmlinux} seems not to be a known kernel" >&2
+	exit 1
+fi
+
+# extract the used gcc version
+./scripts/gcc_used.sh "${versionstringfile}" "${gccversionfile}"
+if [ $i -eq 0 ];
+then
+	# failed, exit with error
+	echo "$(basename $0): can't detect gcc used for ${vmlinux}" >&2
+	exit 1
+fi
+
+# now check if the required headers are available
+if [ ! -d "/usr/src/linux-headers-${kernelver}" ];
+then
+	# headers for running system are not available
+	echo "$(basename $0): linux headers required for ${kernelver} are not available" >&2
+	echo "If you want to use alx-wol: you have to take care that before installing" \
+		"a new kernel the headers are available. Otherwise dkms will skip the installation." >&2
+	echo "There are Linux distributions which don't take care for the required dependencies." >&2
+	echo "After header installation execute a reboot - sometimes the kernel gets installed" \
+		"together with the headers. In that case the new installed kernel has to run before" \
+		"alx-wol installation." >&2
+	exit 1
+fi
+
+# work done, remove the temporary files
+rm -rf "${temp}"
+
 # get the pagage name out of dkms.conf
 this_name="$(grep '^[^#]*PACKAGE_NAME=\"' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p')"
 

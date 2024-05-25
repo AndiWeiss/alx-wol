@@ -34,7 +34,11 @@ then
 	fi
 
 	# now try to identify the kernel provider
-	if [ $(grep -c "Ubuntu" "${in}") -ne 0 ];
+	if [ $(grep -c "proxmox" "${in}") -ne 0 ];
+	then
+		# proxmox kernel
+		version=$(${scriptpath}/Proxmox.sh "${in}" "kernel")
+	elif [ $(grep -c "Ubuntu" "${in}") -ne 0 ];
 	then
 		# ubuntu kernel
 		version=$(${scriptpath}/Ubuntu.sh "${in}" "kernel")
