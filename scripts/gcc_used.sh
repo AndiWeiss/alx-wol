@@ -34,6 +34,9 @@ then
 	then
 		# Debian kernel
 		version=$(${scriptpath}/Debian.sh "${in}" "gcc")
+	elif [ $(grep -c "archlinux" "${in}") -ne 0 ];
+	then
+		version=$(${scriptpath}/Archlinux.sh "${in}" "gcc")
 	else
 		# wasn't able to detect the kernel creator
 		# exit with error

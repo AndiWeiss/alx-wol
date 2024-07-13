@@ -10,6 +10,17 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+Version 2.1.2 adds support for Arch Linux.
+
+**Caution!** Arch linux users have to install some more packages before
+calling the install script!  
+Please install: `pacman -S which dkms wget linux-headers`
+
+**Additional hint for Proxmox users:** after module exchange the network
+has to be restarted.  
+So if you don't want to boot use
+`systemctl restart networking.service` to do so.
+
 Since Version 2.1.1 a first try of support for Proxmox is added.
 There are some issues with the Proxmox system. On Debian and Ubuntu
 when installing dkms the package `build-essential` gets installed.

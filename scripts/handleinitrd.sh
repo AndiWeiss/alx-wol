@@ -49,6 +49,10 @@ then
 				# module shall be removed
 				# search the original one
 				module="$(echo "${modules}" | grep '/lib/modules/[^/]*/kernel/')"
+				if [ "${module}"="" ];
+				then
+					module="$(find /usr/lib/modules/${kernelver} -name "${name}".*)"
+				fi
 			fi
 			# and insert the module
 			insmod "${module}"
@@ -59,7 +63,12 @@ fi
 depmod "${kernelver}"
 
 # now update the initramfs
-update-initramfs -u -k "${kernelver}"
+if [ $(grep "^NAME=" /etc/os-release | grep -c 'Arch Linux') -eq 1 ];
+then
+	mkinitcpio -P -k "${kernelver}"
+else
+	update-initramfs -u -k "${kernelver}"
+fi
 
 # and exit with the exit code of update-initramfs
 exit $?

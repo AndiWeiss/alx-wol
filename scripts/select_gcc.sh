@@ -26,19 +26,18 @@ get_version ()
 {
 	# extract the version information out of 'gcc --version'
 	# take the three digit version at the end of the line
-	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\)$|\1|p'
+	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\).*$|\1|p'
 }
 
 # ask all files which may be a gcc for the version
-for exe in $(ls /usr/bin/${arch}*gcc*)
+for exe in $(ls /usr/bin/${arch}*gcc*);
 do
 	# check for: file, no link, executable
 	if [ -f "${exe}" ] && [ ! -L "${exe}" ] && [ -x "${exe}" ];
 	then
 		# ask for version
 		versionstring="$(${exe} --version | \
-			grep 'gcc.*[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')"
-
+			grep 'gcc.*[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}.*$')"
 		# and extract it if requirements are fulfilled
 		if [ "${versionstring}" != "" ];
 		then

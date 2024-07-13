@@ -26,13 +26,13 @@ then
 fi
 
 # get the pagage name out of dkms.conf
-this_name="$(grep '^[^#]*PACKAGE_NAME=\"' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p')"
+this_name="$(grep '^[^#]*PACKAGE_NAME=' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p')"
 
 # get the version out of dkms.conf
-this_version="$(grep '^[^#]*PACKAGE_VERSION=\"' dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p')"
+this_version="$(grep '^[^#]*PACKAGE_VERSION=' dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p')"
 
 # get the module name out of dkms.conf
-this_module_name="$(grep '^[^#]*BUILT_MODULE_NAME\[0\]=\"' dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p')"
+this_module_name="$(grep '^[^#]*BUILT_MODULE_NAME\[0\]=' dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p')"
 
 # check if the package is installed
 installed="$(dkms status | grep "^${this_name}/")"

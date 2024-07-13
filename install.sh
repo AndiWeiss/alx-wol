@@ -40,6 +40,35 @@ fi
 temp=.temp
 export kernelver=$(uname -r)
 kernel="/boot/vmlinuz-${kernelver}"
+if [ ! -e "${kernel}" ];
+then
+	# the kernel seems not to contain the version in the filename
+	# try to get the kernel file
+	grep -c BOOT_IMAGE /proc/cmdline >& /dev/null
+	if [ $? -ne 0 ];
+	then
+		echo "can't find kernel file" >&2
+		exit
+	fi
+#	kernel="/boot/$(sed -n 's|^.*BOOT_IMAGE=\S*/\([^/]*\)\s.*$|\1|g;p' /proc/cmdline)"
+	for part in $(cat /proc/cmdline);
+	do
+		echo "${part}" | grep '^BOOT_IMAGE=' >& /dev/null
+		if [ $? -eq 0 ];
+		then
+			kernel="/boot/$(echo "${part}" | sed -n 's|^.*/\([^/]*\)$|\1|g;p')"
+			break
+		fi
+	done
+
+	if [ ! -e "${kernel}" ];
+	then
+		echo "can't find kernel file (2)" >&2
+		exit
+	fi
+fi
+echo "#### kernel file: ${kernel} ####"
+
 major=$(uname -r | sed -n 's|^\([0-9]\+\)\..*$|\1|g;p')
 minor=$(uname -r | sed -n 's|^[0-9]\+\.\([0-9]\+\)\..*$|\1|g;p')
 versionstringfile=${temp}/kernel_version_string
@@ -105,7 +134,7 @@ then
 fi
 
 # now check if the required headers are available
-if [ ! -d "/usr/src/linux-headers-${kernelver}" ];
+if [ ! -d "/usr/src/linux-headers-${kernelver}" ] && [ ! -d "/usr/src/linux" ];
 then
 	# headers for running system are not available
 	echo "$(basename $0): linux headers required for ${kernelver} are not available" >&2
@@ -122,13 +151,13 @@ fi
 rm -rf "${temp}"
 
 # get the pagage name out of dkms.conf
-this_name="$(grep '^[^#]*PACKAGE_NAME=\"' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p')"
+this_name="$(grep '^[^#]*PACKAGE_NAME=' dkms.conf | sed -n 's|.*PACKAGE_NAME=\"||g;s|\"$||g;p')"
 
 # get the version out of dkms.conf
-this_version="$(grep '^[^#]*PACKAGE_VERSION=\"' dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p')"
+this_version="$(grep '^[^#]*PACKAGE_VERSION=' dkms.conf | sed -n 's|.*PACKAGE_VERSION=\"||g;s|\"$||g;p')"
 
 # get the module name out of dkms.conf
-this_module_name="$(grep '^[^#]*BUILT_MODULE_NAME\[0\]=\"' dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p')"
+this_module_name="$(grep '^[^#]*BUILT_MODULE_NAME\[0\]=' dkms.conf | sed -n 's|.*BUILT_MODULE_NAME\[0\]=\"||g;s|\"$||g;p')"
 
 # check if the package is installed
 installed="$(dkms status | grep "^${this_name}/")"
@@ -218,7 +247,7 @@ done
 if [ -f "/usr/src/${this_name}-${this_version}/dkms.conf" ];
 then
 	# and set the correct access rights
-	sudo chmod 644 "/usr/src/${this_name}-${this_version}/dkms.conf"
+	chmod 644 "/usr/src/${this_name}-${this_version}/dkms.conf"
 else
 	echo "didn't find dkms.conf"
 fi
