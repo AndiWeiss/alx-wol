@@ -38,6 +38,10 @@ then
 	then
 		# ubuntu kernel
 		version=$(${scriptpath}/Ubuntu.sh "${in}" "kernel")
+	elif [ $(grep -c "\-pve" "${in}") -ne 0 ];
+	then
+		# Proxmox kernel
+		version=$(${scriptpath}/pve.sh "${in}" "kernel")
 	elif [ $(grep -c "Debian" "${in}") -ne 0 ];
 	then
 		# Debian kernel
