@@ -30,7 +30,13 @@ get_version ()
 }
 
 # ask all files which may be a gcc for the version
-for exe in $(ls /usr/bin/${arch}*gcc*);
+# first try with architecture in the name
+gccs="$(ls /usr/bin/${arch}*gcc* 2>&1)"
+if [ $? -ne 0 ]; then
+	# nothing found, now try without architecture
+	gccs="$(ls /usr/bin/*gcc* 2>&1)"
+fi
+for exe in $gccs;
 do
 	# check for: file, no link, executable
 	if [ -f "${exe}" ] && [ ! -L "${exe}" ] && [ -x "${exe}" ];

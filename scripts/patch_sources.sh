@@ -91,6 +91,7 @@ do
 		echo "$(basename "$0"): file $file doesn't exist"
 		exit_on_error
 	fi
+	echo "#### Patch $(basename "${file}") is applied ####"
 
 	# apply the patch
 	patch -d "${writeto}" -p 1 < "${file}"

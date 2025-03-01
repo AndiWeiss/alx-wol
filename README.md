@@ -10,43 +10,15 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
-Version 2.1.2 adds support for Arch Linux.
+**Version 3.0 has been successfully tested on: Debian, Ubuntu, Proxmox, Fedora,
+Arch and Suse!**
 
-**Caution!** Arch linux users have to install some more packages before
-calling the install script!  
-Please install: `pacman -S which dkms wget linux-headers`
+It is expected that the kernel got compiled with gcc.
+As tool for initrd createion there has to be either mkinitcpio, update-initramfs
+or dracut.
 
-**Additional hint for Proxmox users:** after module exchange the network
-has to be restarted.  
-So if you don't want to boot use
-`systemctl restart networking.service` to do so.
-
-Since Version 2.1.1 a first try of support for Proxmox is added.
-There are some issues with the Proxmox system. On Debian and Ubuntu
-when installing dkms the package `build-essential` gets installed.
-This package installs the required linux headers, too.
-On Proxmox Virtual Environment V8.2 this is not the case.
-At least the headers for the currently running kernel are not installed.
-
-If you want to use alx-wol on Proxmox please install the package
-`proxmox-default-headers` and execute a reboot before doing the
-alx-wol installation.
-
-Since version 2.1 alx-wol is prepared for an easy adaption to other 
-distributions than Ubuntu.  
-First implemented is Debian.
-
-Since version 2.0 of alx-wol this can not only be used to get alx
-driver with wake on lan working.
-
-Now this can be used for any kernel module which shall be patched
-based on the original kernel sources. This system analyses the kernel
-which shal be installed, detects its version and the compiler used. The
-information about the kernel version is used to fetch the original
-sources from kernel.org. A config file tells the system which patch to
-use with which kernel version. The sources are patched. The system tries
-to find the optimal compiler for the module and builds with it. After
-that the initramf is updated to provide the new kernel module.
+Please take care to check the requirements based on the explanations about usage
+with different distributions.
 
 ## Where it comes from
 
@@ -63,10 +35,10 @@ kernel.org and created a patch to bring it in again.
 With the next kernel update of Ubuntu I decided to get the compilation
 of the module done automatically. Here my journey into dkms started.
 
-Now I released version 2.0 of alx-wol.
+Now I released version 3.0 of alx-wol.
 
-And to be honest: this is more than alx driver with wake on lan. This
-version is a framework for creating kernel modules based on original
+And to be honest: this is much more than alx driver with wake on lan.
+This version is a framework for creating kernel modules based on original
 kernel sources. It automatically detects the kernel version and the
 compiler used for the kernel. Then it downloads the original kernel
 sources, applies configurable patches and builds. And last but not
@@ -77,81 +49,104 @@ two more examples which can be found in 'other_examples'.
 
 ## Compatibility
 
-alx-wol has been tested on Ubuntu 22.04, 23.10 and 24.04. With regular 
-kernel updates delieverd by Ubuntu the system works pretty nice. Also 
-the kernels which can be downloaded from
-[Mainline Kernel PPA](https://kernel.ubuntu.com/~kernel-ppa/mainline/)
-work fine.
-
-A short test has been executed on Debian 12 "bookworm".
-
-Now another short test has been done on Proxmox Virtual Environment
-V8.2. Please be careful with the linux header installation. I can't say
-if these are always done during installation of a new kernel. If not
-the alx build will fail and you don't have wake on lan.
-
-In case of self compiled kernels one has to take care that the version
-strings follow one of the Ubuntu ways.
-
-If you want to use newer mainline kernels you can download and install
-them. But you have to keep in mind that Ubuntu changes the environment
-for building these kernels. So it can happen that a precompiled kernel
-package leads to issues of alx-wol - which not neccesarily is based on
-the alx-wol mechanism.
-
-That was the case with kernel versions 6.4.13 and newer. Here Ubuntu
-used a newer version of libc which wasn't compatible to the previous
-one. It was not possible to install these mainline kernel packages
-without additional big changes in the system. But as these packages
-can't be installed the dkms mechanisms of alx-wol are not triggered.
-It is NOT an issue of alx-wol.
-
-With newer updates even Ubuntu 22.04 was switched to kernel 6.5. Here
-of course also alx-wol works fine.
-
-With Ubuntu 23.10 Ubuntu introduced a change in update-initramfs.
-Getting that full functional was the kickoff for creating the generic
-kernel module patch system as it is here.
-
-In general: Ubuntu 22.04, 22.10 and 23.04 are supported.
-Kernel versions v5.15.50 and newer are supported.  
-But not all of the Ubuntu Mainline kernel packages are installable.
+alx-wol 3.0 has been tested on Debian 12 (Bookworm), Ubuntu 24.4 (Noble Numbat),
+Proxmox VE 8.3-1, Fedora 41-1.4, Arch 2025-02-01 and Suse Leap 15.6.
 
 ## How to use it
 
+- take care to fulfill the distribution related requirements (see below)
 - clone the git repository
 - cd into alx-wol
 - execute *as root* **./install.sh**  
   you may use **sudo** for the execution
 
-The script will check if there's already an old version of this dkms.  
-If yes this can be deinstalled.
+## Distribution dependent requirements
 
-*I didn't test the deinstallation very deeply. In the case that the
-automatic deinstallation fails please use  
-`sudo dkms remove alx-wol/<version_to_remove>`  
-to get back to the original alx driver and then du the installation
-again.*
+### Debian
 
-After that the new version is installed.  
-To do so the alx sources are fetched from kernel.org,  
-then the dkms mechanism is called to install the package.
+Before doing the installation on a Debian system please install dkms and wget.
 
-As last action the script checks if the running kernel uses the original
-version of the alx driver. If yes it is replaced by the new compiled
-alx-wol module. The initrd is updated so that the wol feature is still
-available after the next reboot. If the kernel is changed to a
-different version the reboot should be done soon.
+`sudo apt install dkms wget`
+
+### Ubuntu
+
+The installation requires dkms to be installed.
+
+`sudo apt install dkms`
+
+If you want to install a kernel from the
+[Ubuntu Mainline Kernel PPA](https://kernel.ubuntu.com/mainline/)
+you need to know that Ubuntu may use different compilers for those kernel.
+Either check in advance if the compilers you have installed are able to
+compile the module or - in the case compilation crashes - check the log which
+is mentioned by the installation process for the missing compiler.
+
+As example I can tell the Ubuntu 24.04.5 standard kernel is compiled with gcc-13
+while the mainline kernel 6.12 is compiled with gcc-14. New compiler parameter
+are used, therefore the compilation fails. Checking the log file points to
+different compiler used.
+
+After this finding you can install the required compiler
+(in that case `sudo apt install gcc-14) and the module will be compiled
+and installed.
+
+### Proxmox
+
+To be able to install alx-wol on a Proxmos system dkms and the matching linux
+headers have to be installed.
+
+`sudo apt install dkms proxmox-headers-$(uname -r)`
+
+I didn't check the Proxmox update mechanisms. Because of this a kernel update
+should be carefully checked as I don't know if the headers are updated together
+with the kernel. For me it is a bit strange that the installation of dkms
+doesn't lead to the linux headers matching to the current kernel.
+
+### Arch linux
+
+There are multiple possibilities to install an Arch linux system. Any of these
+requires dkms, wget, which and linux-headers to be installed.
+
+`pacman -S dkms wget which linux-headers`
+
+I didn't check the regular Arch update mechanism. Please check the logs when
+Arch does a kernel update.
+
+### Fedora
+
+On Fedora systems dkms has to be installed before alx-wol installation.
+
+I faced some issues when doing the installation while the system didn't finish
+the update process. Therefor please FIRST do an upgrade, then execute a reboot
+and after that install dkms and do the alx-wol installation.
+
+`sudo yum upgrade`  
+`sudo reboot` (or execute a manual reboot)  
+`sudo yum install dkms`
+
+I didn't check the regular Fedora update mechanism. Please check the logs when
+Fedora does a kernel update.
+
+### Suse
+
+The default Suse installation doesn't contain patch, so additionally to dkms
+patch has to be installed, too.
+
+On Suse, comparable to Fedora, I faced issues when doing the installation
+without a complete update in advance.
+
+`sudo zypper update`  
+`sudo reboot` (or execute a manual reboot)  
+`sudo zypper install dkms path`
+
+I didn't check the regular Suse update mechanism. Please check the logs when
+Suse does a kernel update.
 
 ## Ho to remove it
 
 Calling the script `remove.sh` will remove all installed versions of
 this package from dkms. Only the installed data will be removed, the
 sources are not removed with the script.
-
-Only versions which have been successfully installed are removed.
-In the case that there are artifacts from older versions these have to
-be removed manually.
 
 To check if there are remaining artefacts call
 
@@ -208,20 +203,38 @@ effort in alx-wol:
   mkinitramfs  
   This hook installs **all** dkms build modules into the initramfs
 
-## issue found in Debian
-
-When installing the required kernel header the script `extract-vmlinux`
-of the kernel sources is not installed. Because of that the script 
-`extract_kversion_string.sh` first checks if the script is available 
-and if not downloads and uses the one matching the currently running 
-kernel.
-
-# documentation for the generic dkms mechanism
+# Documentation for the generic dkms mechanism
 
 The new generic kernel module patch mechanism is explained
 [here](kernelpatching.md)
 
+# Known issues
+
+There is an issue when setting the Wake-on feature to `d`. If this is done
+the ethernet interface doesn't come up after system wakes up after a suspend.
+
+To recover from this there are two possibilities:
+
+- execute a reboot
+- execute the following sequence:  
+  `sudo rmmod alx`  
+  `sudo insmod $(find /lib/modules/$(uname -r)/ -name 'alx.*' | grep -v /kernel/)`
+
+
 # History
+
+**Version 3.0**
+
+Change kernel version and compiler used detection.
+With this the mechanism should work on nearly any distribution.
+
+**Version 2.1.2**
+
+First try to add Arch Linux support
+
+**Version 2.1.1**
+
+First try to add Proxmox support
 
 **Version 2.1**
 

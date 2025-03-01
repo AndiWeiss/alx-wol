@@ -1,10 +1,20 @@
-[kernel 5.15.1]
+[kernel 5.15]
 [kerneldir]
 drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_5.15.1.patch
+patches/alx-wol_v5.15.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.15.31]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.15.31.patch
 [versionpatch]
 alx/main.c
 
@@ -14,7 +24,17 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_5.15.75.patch
+patches/alx-wol_v5.15.75.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.15.133]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.15.133.patch
 [versionpatch]
 alx/main.c
 
@@ -24,7 +44,47 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_5.16.patch
+patches/alx-wol_v5.16.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.16.17]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.16.17.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.17]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.17.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.18]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.18.patch
+[versionpatch]
+alx/main.c
+
+[kernel 5.19]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v5.19.patch
 [versionpatch]
 alx/main.c
 
@@ -34,7 +94,7 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_5.15.75.patch
+patches/alx-wol_v5.19.17.patch
 [versionpatch]
 alx/main.c
 
@@ -44,7 +104,7 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_6.0.patch
+patches/alx-wol_v6.0.patch
 [versionpatch]
 alx/main.c
 
@@ -54,7 +114,37 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_6.0.3.patch
+patches/alx-wol_v6.0.3.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.1]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.1.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.1.55]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.1.55.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.2]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.2.patch
 [versionpatch]
 alx/main.c
 
@@ -64,6 +154,116 @@ drivers/net/ethernet/atheros
 [files]
 alx
 [patches]
-patches/alx-wol_6.3.patch
+patches/alx-wol_v6.3.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.4]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.4.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.5]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.5.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.5.5]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.5.5.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.6]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.6.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.7]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.7.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.8]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.8.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.9]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.9.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.10]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.10.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.11]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.11.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.12]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.12.patch
+[versionpatch]
+alx/main.c
+
+[kernel 6.13]
+[kerneldir]
+drivers/net/ethernet/atheros
+[files]
+alx
+[patches]
+patches/alx-wol_v6.13.patch
 [versionpatch]
 alx/main.c

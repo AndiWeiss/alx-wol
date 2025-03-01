@@ -1,8 +1,7 @@
-diff --git a/alx/ethtool.c b/alx/ethtool.c
-index b716ada..6c6dcf0 100644
---- a/alx/ethtool.c
-+++ b/alx/ethtool.c
-@@ -321,11 +321,51 @@ static int alx_get_sset_count(struct net_device *netdev, int sset)
+diff -upr v6.4/alx/ethtool.c v6.4_patched/alx/ethtool.c
+--- v6.4/alx/ethtool.c	2025-03-14 17:58:13.857399370 +0100
++++ v6.4_patched/alx/ethtool.c	2025-03-14 18:08:24.097395633 +0100
+@@ -321,11 +321,51 @@ static int alx_get_sset_count(struct net
  	}
  }
  
@@ -54,11 +53,10 @@ index b716ada..6c6dcf0 100644
  	.get_link	= ethtool_op_get_link,
  	.get_strings	= alx_get_strings,
  	.get_sset_count	= alx_get_sset_count,
-diff --git a/alx/hw.c b/alx/hw.c
-index 6ac40b0..f9bf612 100644
---- a/alx/hw.c
-+++ b/alx/hw.c
-@@ -332,6 +332,16 @@ void alx_set_macaddr(struct alx_hw *hw, const u8 *addr)
+diff -upr v6.4/alx/hw.c v6.4_patched/alx/hw.c
+--- v6.4/alx/hw.c	2025-02-28 15:18:18.358783176 +0100
++++ v6.4_patched/alx/hw.c	2025-03-14 18:08:24.097395633 +0100
+@@ -332,6 +332,16 @@ void alx_set_macaddr(struct alx_hw *hw,
  	alx_write_mem32(hw, ALX_STAD1, val);
  }
  
@@ -75,7 +73,7 @@ index 6ac40b0..f9bf612 100644
  static void alx_reset_osc(struct alx_hw *hw, u8 rev)
  {
  	u32 val, val2;
-@@ -774,7 +784,6 @@ int alx_setup_speed_duplex(struct alx_hw *hw, u32 ethadv, u8 flowctrl)
+@@ -774,7 +784,6 @@ int alx_setup_speed_duplex(struct alx_hw
  	return err;
  }
  
@@ -83,7 +81,7 @@ index 6ac40b0..f9bf612 100644
  void alx_post_phy_link(struct alx_hw *hw)
  {
  	u16 phy_val, len, agc;
-@@ -848,6 +857,65 @@ void alx_post_phy_link(struct alx_hw *hw)
+@@ -848,6 +857,65 @@ void alx_post_phy_link(struct alx_hw *hw
  	}
  }
  
@@ -149,7 +147,7 @@ index 6ac40b0..f9bf612 100644
  bool alx_phy_configured(struct alx_hw *hw)
  {
  	u32 cfg, hw_cfg;
-@@ -920,6 +988,26 @@ int alx_clear_phy_intr(struct alx_hw *hw)
+@@ -920,6 +988,26 @@ int alx_clear_phy_intr(struct alx_hw *hw
  	return alx_read_phy_reg(hw, ALX_MII_ISR, &isr);
  }
  
@@ -176,7 +174,7 @@ index 6ac40b0..f9bf612 100644
  void alx_disable_rss(struct alx_hw *hw)
  {
  	u32 ctrl = alx_read_mem32(hw, ALX_RXQ0);
-@@ -1044,6 +1132,70 @@ void alx_mask_msix(struct alx_hw *hw, int index, bool mask)
+@@ -1044,6 +1132,70 @@ void alx_mask_msix(struct alx_hw *hw, in
  	alx_post_write(hw);
  }
  
@@ -247,10 +245,9 @@ index 6ac40b0..f9bf612 100644
  
  bool alx_get_phy_info(struct alx_hw *hw)
  {
-diff --git a/alx/hw.h b/alx/hw.h
-index e42d7e0..a7fb6c8 100644
---- a/alx/hw.h
-+++ b/alx/hw.h
+diff -upr v6.4/alx/hw.h v6.4_patched/alx/hw.h
+--- v6.4/alx/hw.h	2025-02-28 15:18:18.358783176 +0100
++++ v6.4_patched/alx/hw.h	2025-03-14 18:08:24.097395633 +0100
 @@ -487,6 +487,8 @@ struct alx_hw {
  	u8 flowctrl;
  	u32 adv_cfg;
@@ -275,7 +272,7 @@ index e42d7e0..a7fb6c8 100644
  void alx_cfg_mac_flowcontrol(struct alx_hw *hw, u8 fc);
  void alx_start_mac(struct alx_hw *hw);
  int alx_reset_mac(struct alx_hw *hw);
-@@ -563,6 +567,7 @@ bool alx_phy_configured(struct alx_hw *hw);
+@@ -563,6 +567,7 @@ bool alx_phy_configured(struct alx_hw *h
  void alx_configure_basic(struct alx_hw *hw);
  void alx_mask_msix(struct alx_hw *hw, int index, bool mask);
  void alx_disable_rss(struct alx_hw *hw);
@@ -283,11 +280,10 @@ index e42d7e0..a7fb6c8 100644
  bool alx_get_phy_info(struct alx_hw *hw);
  void alx_update_hw_stats(struct alx_hw *hw);
  
-diff --git a/alx/main.c b/alx/main.c
-index d593958..3ce5bb0 100644
---- a/alx/main.c
-+++ b/alx/main.c
-@@ -1069,6 +1069,7 @@ static int alx_init_sw(struct alx_priv *alx)
+diff -upr v6.4/alx/main.c v6.4_patched/alx/main.c
+--- v6.4/alx/main.c	2025-03-14 17:58:19.721399334 +0100
++++ v6.4_patched/alx/main.c	2025-03-14 18:08:24.097395633 +0100
+@@ -1068,6 +1068,7 @@ static int alx_init_sw(struct alx_priv *
  	alx->dev->max_mtu = ALX_MAX_FRAME_LEN(ALX_MAX_FRAME_SIZE);
  	alx->tx_ringsz = 256;
  	alx->rx_ringsz = 512;
@@ -295,7 +291,7 @@ index d593958..3ce5bb0 100644
  	hw->imt = 200;
  	alx->int_mask = ALX_ISR_MISC;
  	hw->dma_chnl = hw->max_dma_chnl;
-@@ -1371,6 +1372,69 @@ static int alx_stop(struct net_device *netdev)
+@@ -1370,6 +1371,69 @@ static int alx_stop(struct net_device *n
  	return 0;
  }
  
@@ -365,7 +361,7 @@ index d593958..3ce5bb0 100644
  static void alx_link_check(struct work_struct *work)
  {
  	struct alx_priv *alx;
-@@ -1865,6 +1929,8 @@ static int alx_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1863,6 +1927,8 @@ static int alx_probe(struct pci_dev *pde
  		goto out_unmap;
  	}
  
@@ -374,7 +370,7 @@ index d593958..3ce5bb0 100644
  	netdev_info(netdev,
  		    "Qualcomm Atheros AR816x/AR817x Ethernet [%pM]\n",
  		    netdev->dev_addr);
-@@ -1909,32 +1975,74 @@ static void alx_remove(struct pci_dev *pdev)
+@@ -1904,32 +1970,74 @@ static void alx_remove(struct pci_dev *p
  static int alx_suspend(struct device *dev)
  {
  	struct alx_priv *alx = dev_get_drvdata(dev);
@@ -457,7 +453,7 @@ index d593958..3ce5bb0 100644
  		err = 0;
  		goto unlock;
  	}
-@@ -1943,7 +2051,7 @@ static int alx_resume(struct device *dev)
+@@ -1938,7 +2046,7 @@ static int alx_resume(struct device *dev
  	if (err)
  		goto unlock;
  
@@ -466,15 +462,7 @@ index d593958..3ce5bb0 100644
  
  unlock:
  	mutex_unlock(&alx->mtx);
-@@ -1957,7 +2065,6 @@ static SIMPLE_DEV_PM_OPS(alx_pm_ops, alx_suspend, alx_resume);
- #define ALX_PM_OPS      NULL
- #endif
- 
--
- static pci_ers_result_t alx_pci_error_detected(struct pci_dev *pdev,
- 					       pci_channel_state_t state)
- {
-@@ -2000,6 +2107,8 @@ static pci_ers_result_t alx_pci_error_slot_reset(struct pci_dev *pdev)
+@@ -1990,6 +2098,8 @@ static pci_ers_result_t alx_pci_error_sl
  	}
  
  	pci_set_master(pdev);
@@ -483,11 +471,12 @@ index d593958..3ce5bb0 100644
  
  	alx_reset_pcie(hw);
  	if (!alx_reset_mac(hw))
-@@ -2054,6 +2163,7 @@ static struct pci_driver alx_driver = {
+@@ -2044,6 +2154,7 @@ static struct pci_driver alx_driver = {
  	.id_table    = alx_pci_tbl,
  	.probe       = alx_probe,
  	.remove      = alx_remove,
 +	.shutdown    = alx_shutdown,
  	.err_handler = &alx_err_handlers,
- 	.driver.pm   = ALX_PM_OPS,
+ 	.driver.pm   = pm_sleep_ptr(&alx_pm_ops),
  };
+Nur in v6.4_patched/alx: main.c.orig.

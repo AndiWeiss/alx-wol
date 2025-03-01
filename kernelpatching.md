@@ -45,11 +45,11 @@ so the module is created in that directory.
 **DEST_MODULE_NAME[0]** should be the same as BUILT_MODULE_NAME[0].
 
 **DEST_MODULE_LOCATION[0]** is the location where the module shall be
-deployed.
+deployed. This should be the path where the original module is located.
 
-This path is relative to the original module path. In case of Ubuntu
-based systems keep /updates. A change of this value requires changes in
-the scripting!
+The dkms system on many distributions uses a hard coded value for
+DEST_MODULE_LOCATION. Nevertheless the patch mechanism needs the original
+path for a clean removal of the package.
 
 Do not change any other line in dkms.conf.
 
@@ -63,11 +63,11 @@ system, so it should follow the kbuild recommendations.
 This file contains the information which sources to fetch for which
 kernel version and the required patches for them.
 
-#### kernel version definition
+#### Kernel version definition
 
 example:
 
-**`[kernel 5.15.1]`**
+**`[kernel 5.15]`**
 
 all lines until the next line starting with `[kernel` are used for this
 kernel version and higher versions. Higher versions means until the next
@@ -101,12 +101,12 @@ define is not in the file it will be added and contain a time stamp.
 Otherwise a time stamp is added behind the original content, separated
 by an underscore.
 
-# internals
+# Internals
 
 The following explains in detail how the mechanism works.
 Each script is explained.
 
-## generic flow
+## Generic flow
 
 If a new kernel gets installed in a system equipped with dkms each
 dkms based module gets compiled.
@@ -119,96 +119,28 @@ variables which can be set in the file. But additonally one can add
 regular script handling here.
 
 Before anything else is done the scripting inside dkms.conf is
-processed. This is used to extract required information out of the
-kernel to install. Each kernel source contains a script to extract the
-vmlinux out of the prepared kernel file. this is used to get the
-uncompressed linux kernel. The uncompressed kernel contains a lot of
-strings - one of them contains the kernel version.
+processed. This is used to extract required information.
 
-The script `extract_kversion_string.sh` first extracts the kernel and
-then the version string out of the uncompressed kernel. Since alx-wol 
-version 2.1 it first checks if the required kernel script `extract-vmlinux` 
-is available in the kernel headers.  
-If it is not available it is fetched from kernel.org based on the
-version of the currently running kernel.
+The kernel version can be detected by checking the Makefile belonging to the
+linux headers for the three variables `VERSION`, `PATCHLEVEL` and `SUBLEVEL`.
+Problem here may be that the file  
+`/usr/src/$(uname -r)/Makefile`  
+may not be the complete makefile of the kernel headers. In several distributions
+this file only includes the 'real' makefile. Based on this finding the alx-wol
+mechanism checks if the first file contains the variables and if not it checks
+if another Makefile is include. If yes it checks that for the variables.
 
-The script `extract_kversion.sh` uses the kernel version string to
-get the kernel version. This is a wrapper for distribution dependent
-scripts. Currently there are scripts for Ubuntu and Debian.
-
-The script `Ubuntu.sh` is able to handle two different version string 
-formats found in Ubuntu kernels: the one of a regular update and the 
-one of mainline ppa kernels. This script expects two parameters. The
-First parameter is the file containing the complete kernel version 
-string. The second parameter has to be either kernel or gcc to tell
-what to extract.
-
-Regular Ubuntu kernels contain a string like this (in one line):  
-`Linux version 6.5.0-14-generic (buildd@lcy02-amd64-110)`  
-`(x86_64-linux-gnu-gcc-12 (Ubuntu 12.3.0-1ubuntu1~22.04) 12.3.0, GNU ld (GNU Binutils for Ubuntu) 2.38)`  
-`#14~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon Nov 20 18:15:30 UTC 2`  
-`(Ubuntu 6.5.0-14.14~22.04.1-generic 6.5.3)`
-
-Ubuntu Mainline PPA kernel contain:  
-`Linux version 6.6.5-060605-generic (kernel@kathleen)`  
-`(x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-7ubuntu1) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.41)`  
-`#202312080833 SMP PREEMPT_DYNAMIC Fri Dec  8 08:45:34 UTC 2023`
-
-Having that in mind leads to:
-
-- first check if there is a three number version followed by a bracket
-  at the end of the line  
-  If yes and major plus minor fits the name of the kernel to install:  
-  take this three number version as kernel version
-- if this is not the case check for a three number version behind
-  `Linux version`  
-  If yes and major plus minor fits the name of the kernel to install:  
-  take that one
-- if none of these possibilities was found we can't proceed
-
-The script `Debian.sh` is able to handle two different version string 
-formats found in Ubuntu kernels: the one of a regular update and the 
-one of mainline ppa kernels. This script expects two parameters. The
-First parameter is the file containing the complete kernel version 
-string. The second parameter has to be either kernel or gcc to tell
-what to extract.
-
-Debian kernel string example:  
-`Linux version 6.1.0-18-amd64 (debian-kernel@lists.debian.org)`  
-`(gcc-12 (Debian 12.2.0-14) 12.2.2, GNU ld (GNU Binutils for Debian) 2.40)`  
-`# SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01)`
-
-If none of these mechanisms fulfills the requirements one can add 
-another custom kernel version into `extract_kversion.sh` and create an
-additonal extraction script.
-
-The same version string is used to get the gcc version used to compile
-the kernel. This is done in `gcc_used.sh`. That script is another 
-wrapper around the extraction scripts. Extracting the gcc version used
-is identical for Ubuntu and Debian.
-
-This script searches mainly for a three digit version followed by a
-comma.  
-If this is found it is expected to be the used gcc version number.
-
-After detecting a gcc version number dkms.conf searches for installed
-gcc versions in the system.  
-To do so it checks for executables starting with the architecture (in
-the mentioned examples `x86_64`) followed by characters containing
-`gcc`.  
-If such files are found as executables they are called with parameter
-`--version`.
-
-The optimum one is returned as compiler to use.
-
-If all of these steps succeeded the required information for a best
-possible patch and compilation is available.
+The compiler version used to compie the kernel can be found in the file  
+``/usr/lib/modules/$(uname -r)/build/include/config/auto.conf``  
+The tag ``CONFIG_CC_VERSION_TEXT`` contains the version string of the gcc.
+Expectation is that the last part of this string is the gcc version number.
 
 Now dkms continues with the information out of `dkms.conf`.
 
 The script defined in `PRE_BUILD` is executed.  
 That's `fetchsources.sh` which is responsible to use the kernel version
-to fetch the configured sources from `kernel.org`.  
+to fetch the configured sources from `kernel.org`.
+
 After fetching all sources the configured patches are applied.
 
 The dkms system calls `make` as next step.

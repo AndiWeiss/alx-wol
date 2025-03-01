@@ -4,17 +4,17 @@
 
 # $1: kernel version to handle
 # $2: install or remove
+# $3: complete path of original module
+# $4: complete path of new module
 kernelver="$1"
 what="$2"
+orig_location="$3"
+new_location="$4"
 
 # get the name of the module out of the dkms.conf file
 i="$(grep '^[[:space:]]*BUILT_MODULE_NAME[[:space:]]*\[[0-9]\{1,\}\][[:space:]]*=' dkms.conf)"
 # maybe there is more than one ...
 all_names="$(echo "$i" | sed -n 's|^[^"]*"\([^"]*\).*$|\1|gp')"
-
-# now get the module location
-i="$(grep '^[[:space:]]*DEST_MODULE_LOCATION[[:space:]]*\[0\][[:space:]]*=' dkms.conf)"
-new_location="$(echo "$i" | sed -n 's|^[^=]*=[[:space:]]*\"\([^\"]*\).*$|\1|p')"
 
 # get the kernel version of the running system
 running="$(uname -r)"
@@ -31,8 +31,6 @@ then
 		# get the current module name
 		cur=$(expr $cur + 1)
 		name="$(echo "$all_names" | sed -n "${cur}p")"
-		# search the module
-		modules="$(find /lib/modules/${kernelver}/ -type f -name "${name}".*)"
 		# check if the module is active
 		active=$(lsmod | grep -c "${name}")
 		if [ $active -ne 0 ];
@@ -43,18 +41,15 @@ then
 			if [ "${what}" = "install" ];
 			then
 				# module shall be installed
-				# search the new compiled one
-				module="$(echo "${modules}" | grep "/lib/modules/[^/]*${new_location}/")"
+				# use the new compiled one
+				module="$new_location"
 			else
 				# module shall be removed
-				# search the original one
-				module="$(echo "${modules}" | grep '/lib/modules/[^/]*/kernel/')"
-				if [ "${module}"="" ];
-				then
-					module="$(find /usr/lib/modules/${kernelver} -name "${name}".*)"
-				fi
+				# use the original one
+				module="$orig_location"
 			fi
 			# and insert the module
+			module="$(find $module -name ${name}.*)"
 			insmod "${module}"
 		fi
 	done
@@ -63,12 +58,24 @@ fi
 depmod "${kernelver}"
 
 # now update the initramfs
-if [ $(grep "^NAME=" /etc/os-release | grep -c 'Arch Linux') -eq 1 ];
-then
-	mkinitcpio -P -k "${kernelver}"
+# check if dracut is available
+which dracut > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+	# yes, use it
+	dracut --force ${kernelver}
 else
-	update-initramfs -u -k "${kernelver}"
+	# dracut not available
+	# check if update-initramfs is available
+	which update-initramfs > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		# yes, use it
+		update-initramfs -u -k "${kernelver}"
+	else
+		# update-initramfs not available
+		# use mkinitcpio
+		mkinitcpio -P -k "${kernelver}"
+	fi
 fi
 
-# and exit with the exit code of update-initramfs
+# and exit with the exit code of initramfs update program
 exit $?

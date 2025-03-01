@@ -1,6 +1,6 @@
-diff -upr v6.0/alx/ethtool.c p6.0/alx/ethtool.c
---- v6.0/alx/ethtool.c	2022-10-22 18:33:19.308956596 +0200
-+++ p6.0/alx/ethtool.c	2024-01-14 01:05:44.796065404 +0100
+diff -upr v5.19/alx/ethtool.c v5.19_patched/alx/ethtool.c
+--- v5.19/alx/ethtool.c	2025-03-14 17:57:52.209399503 +0100
++++ v5.19_patched/alx/ethtool.c	2025-03-14 18:17:11.533392403 +0100
 @@ -321,11 +321,51 @@ static int alx_get_sset_count(struct net
  	}
  }
@@ -53,9 +53,9 @@ diff -upr v6.0/alx/ethtool.c p6.0/alx/ethtool.c
  	.get_link	= ethtool_op_get_link,
  	.get_strings	= alx_get_strings,
  	.get_sset_count	= alx_get_sset_count,
-diff -upr v6.0/alx/hw.c p6.0/alx/hw.c
---- v6.0/alx/hw.c	2022-10-22 17:55:10.900128639 +0200
-+++ p6.0/alx/hw.c	2024-01-14 01:05:44.796065404 +0100
+diff -upr v5.19/alx/hw.c v5.19_patched/alx/hw.c
+--- v5.19/alx/hw.c	2025-02-28 15:18:18.358783176 +0100
++++ v5.19_patched/alx/hw.c	2025-03-14 18:17:11.533392403 +0100
 @@ -332,6 +332,16 @@ void alx_set_macaddr(struct alx_hw *hw,
  	alx_write_mem32(hw, ALX_STAD1, val);
  }
@@ -245,9 +245,9 @@ diff -upr v6.0/alx/hw.c p6.0/alx/hw.c
  
  bool alx_get_phy_info(struct alx_hw *hw)
  {
-diff -upr v6.0/alx/hw.h p6.0/alx/hw.h
---- v6.0/alx/hw.h	2022-10-22 17:55:10.900128639 +0200
-+++ p6.0/alx/hw.h	2024-01-14 01:05:44.796065404 +0100
+diff -upr v5.19/alx/hw.h v5.19_patched/alx/hw.h
+--- v5.19/alx/hw.h	2025-02-28 15:18:18.358783176 +0100
++++ v5.19_patched/alx/hw.h	2025-03-14 18:17:11.533392403 +0100
 @@ -487,6 +487,8 @@ struct alx_hw {
  	u8 flowctrl;
  	u32 adv_cfg;
@@ -280,9 +280,9 @@ diff -upr v6.0/alx/hw.h p6.0/alx/hw.h
  bool alx_get_phy_info(struct alx_hw *hw);
  void alx_update_hw_stats(struct alx_hw *hw);
  
-diff -upr v6.0/alx/main.c p6.0/alx/main.c
---- v6.0/alx/main.c	2022-10-22 18:34:00.973699468 +0200
-+++ p6.0/alx/main.c	2024-01-14 01:08:16.483608040 +0100
+diff -upr v5.19/alx/main.c v5.19_patched/alx/main.c
+--- v5.19/alx/main.c	2025-03-14 17:57:54.429399489 +0100
++++ v5.19_patched/alx/main.c	2025-03-14 18:17:11.533392403 +0100
 @@ -1069,6 +1069,7 @@ static int alx_init_sw(struct alx_priv *
  	alx->dev->max_mtu = ALX_MAX_FRAME_LEN(ALX_MAX_FRAME_SIZE);
  	alx->tx_ringsz = 256;
@@ -291,20 +291,7 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  	hw->imt = 200;
  	alx->int_mask = ALX_ISR_MISC;
  	hw->dma_chnl = hw->max_dma_chnl;
-@@ -1181,11 +1182,8 @@ static int alx_change_mtu(struct net_dev
- 	alx->hw.mtu = mtu;
- 	alx->rxbuf_size = max(max_frame, ALX_DEF_RXBUF_SIZE);
- 	netdev_update_features(netdev);
--	if (netif_running(netdev)) {
--		mutex_lock(&alx->mtx);
-+	if (netif_running(netdev))
- 		alx_reinit(alx);
--		mutex_unlock(&alx->mtx);
--	}
- 	return 0;
- }
- 
-@@ -1371,6 +1369,69 @@ static int alx_stop(struct net_device *n
+@@ -1371,6 +1372,69 @@ static int alx_stop(struct net_device *n
  	return 0;
  }
  
@@ -374,7 +361,7 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  static void alx_link_check(struct work_struct *work)
  {
  	struct alx_priv *alx;
-@@ -1865,6 +1926,8 @@ static int alx_probe(struct pci_dev *pde
+@@ -1865,6 +1929,8 @@ static int alx_probe(struct pci_dev *pde
  		goto out_unmap;
  	}
  
@@ -383,17 +370,17 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  	netdev_info(netdev,
  		    "Qualcomm Atheros AR816x/AR817x Ethernet [%pM]\n",
  		    netdev->dev_addr);
-@@ -1909,28 +1972,71 @@ static void alx_remove(struct pci_dev *p
- static int alx_suspend(struct device *dev)
+@@ -1910,27 +1976,71 @@ static int alx_suspend(struct device *de
  {
  	struct alx_priv *alx = dev_get_drvdata(dev);
-+	struct pci_dev *pdev = alx->hw.pdev;
-+	int err;
-+	bool wol_en;
  
 -	if (!netif_running(alx->dev))
 -		return 0;
 -	netif_device_detach(alx->dev);
++	struct pci_dev *pdev = alx->hw.pdev;
++	int err;
++	bool wol_en;
++
 +	if (netif_running(alx->dev))
 +		netif_device_detach(alx->dev);
  
@@ -462,7 +449,7 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  		err = 0;
  		goto unlock;
  	}
-@@ -1939,7 +2045,7 @@ static int alx_resume(struct device *dev
+@@ -1939,7 +2049,7 @@ static int alx_resume(struct device *dev
  	if (err)
  		goto unlock;
  
@@ -471,7 +458,7 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  
  unlock:
  	mutex_unlock(&alx->mtx);
-@@ -1995,6 +2101,8 @@ static pci_ers_result_t alx_pci_error_sl
+@@ -1995,6 +2105,8 @@ static pci_ers_result_t alx_pci_error_sl
  	}
  
  	pci_set_master(pdev);
@@ -480,7 +467,7 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  
  	alx_reset_pcie(hw);
  	if (!alx_reset_mac(hw))
-@@ -2049,6 +2157,7 @@ static struct pci_driver alx_driver = {
+@@ -2049,6 +2161,7 @@ static struct pci_driver alx_driver = {
  	.id_table    = alx_pci_tbl,
  	.probe       = alx_probe,
  	.remove      = alx_remove,
@@ -488,3 +475,4 @@ diff -upr v6.0/alx/main.c p6.0/alx/main.c
  	.err_handler = &alx_err_handlers,
  	.driver.pm   = ALX_PM_OPS,
  };
+Nur in v5.19_patched/alx: main.c.orig.
