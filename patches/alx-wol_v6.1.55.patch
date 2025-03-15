@@ -53,7 +53,6 @@ diff -upr v6.1.55/alx/ethtool.c v6.1.55_patched/alx/ethtool.c
  	.get_link	= ethtool_op_get_link,
  	.get_strings	= alx_get_strings,
  	.get_sset_count	= alx_get_sset_count,
-Nur in v6.1.55_patched/alx: ethtool.c.orig.
 diff -upr v6.1.55/alx/hw.c v6.1.55_patched/alx/hw.c
 --- v6.1.55/alx/hw.c	2025-02-28 15:18:18.358783176 +0100
 +++ v6.1.55_patched/alx/hw.c	2025-03-14 18:04:11.461397180 +0100

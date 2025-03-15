@@ -475,4 +475,3 @@ diff -upr v5.18/alx/main.c v5.18_patched/alx/main.c
  	.err_handler = &alx_err_handlers,
  	.driver.pm   = ALX_PM_OPS,
  };
-Nur in v5.18_patched/alx: main.c.orig.

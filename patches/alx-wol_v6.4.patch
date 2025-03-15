@@ -479,4 +479,3 @@ diff -upr v6.4/alx/main.c v6.4_patched/alx/main.c
  	.err_handler = &alx_err_handlers,
  	.driver.pm   = pm_sleep_ptr(&alx_pm_ops),
  };
-Nur in v6.4_patched/alx: main.c.orig.

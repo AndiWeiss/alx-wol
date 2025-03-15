@@ -142,6 +142,7 @@ while [ $i -lt $last ]; do
 		&& [ "${file}" != "dkms-adder" ] \
 		&& [ "${file}" != "remove.sh" ] \
 		&& [ "${file}" != "kernelpatching.md" ] \
+		&& [ "${file}" != "kernelsources" ] \
 		&& [ "${file}" != "other_examples" ];
 	then
 		cp --preserve=mode,timestamps -r "${file}" "/usr/src/${this_name}-${this_version}/"

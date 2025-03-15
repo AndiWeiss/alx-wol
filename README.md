@@ -10,6 +10,9 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+**Version 3.1 contains new patches. With these the issue with Wake feature
+configured to `d` is fixed since kernel version 6.5.**
+
 **Version 3.0 has been successfully tested on: Debian, Ubuntu, Proxmox, Fedora,
 Arch and Suse!**
 
@@ -210,6 +213,7 @@ The new generic kernel module patch mechanism is explained
 
 # Known issues
 
+Only kernel before 6.5:  
 There is an issue when setting the Wake-on feature to `d`. If this is done
 the ethernet interface doesn't come up after system wakes up after a suspend.
 
@@ -222,6 +226,10 @@ To recover from this there are two possibilities:
 
 
 # History
+
+**Version 3.1**
+
+New patches. These patches fix the 'Wake on lan disabled' issue since kernel 6.5
 
 **Version 3.0**
 
