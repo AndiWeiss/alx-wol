@@ -14,9 +14,9 @@ This package adds the support for wol again as dkms package.
 configured to `d` is fixed since kernel version 6.5.**
 
 **Version 3.0 has been successfully tested on: Debian, Ubuntu, Proxmox, Fedora,
-Arch and Suse!**
+Arch, Suse and CachyOS!**
 
-It is expected that the kernel got compiled with gcc.
+It is expected that the kernel got compiled with gcc or clang.
 As tool for initrd createion there has to be either mkinitcpio, update-initramfs
 or dracut.
 
@@ -53,7 +53,8 @@ two more examples which can be found in 'other_examples'.
 ## Compatibility
 
 alx-wol 3.0 has been tested on Debian 12 (Bookworm), Ubuntu 24.4 (Noble Numbat),
-Proxmox VE 8.3-1, Fedora 41-1.4, Arch 2025-02-01 and Suse Leap 15.6.
+Proxmox VE 8.3-1, Fedora 41-1.4, Arch 2025-02-01, Suse Leap 15.6 and
+CachyOS (kernel 7.0.9).
 
 ## How to use it
 
@@ -145,7 +146,15 @@ without a complete update in advance.
 I didn't check the regular Suse update mechanism. Please check the logs when
 Suse does a kernel update.
 
-## Ho to remove it
+### CachyOS
+
+Since CachyOS kernels are compiled with Clang, the build system
+automatically detects Clang and uses `LLVM=1 LLVM_IAS=1` during compilation.
+Install dkms, clang and lld before running the install script:
+
+`sudo pacman -S dkms clang lld`
+
+## How to remove it
 
 Calling the script `remove.sh` will remove all installed versions of
 this package from dkms. Only the installed data will be removed, the

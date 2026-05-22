@@ -24,9 +24,9 @@ truncate -s 0 "${list}.unsort"
 
 get_version ()
 {
-	# extract the version information out of 'gcc --version'
-	# take the three digit version at the end of the line
-	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\).*$|\1|p'
+	# extract the version information out of 'gcc --version' or 'clang --version'
+	# accept both "X.Y.Z" and standalone "X" (e.g. clang version 17 -> 17.0.0)
+	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\).*$|\1|p;t;s|^.* \([[:digit:]]\{1,\}\).*$|\1.0.0|p'
 }
 
 # ask all files which may be a gcc for the version
@@ -52,6 +52,26 @@ do
 			echo "$version ${exe}" >> "${list}.unsort"
 		fi
 	fi
+done
+
+# also check for clang executables
+# target the compiler binaries explicitly, not wrapper/format/tidy tools
+target_clang="clang clang++ clang-c clang-cl clang-*"
+for pattern in ${target_clang}; do
+	for exe in /usr/bin/${arch}${pattern} /usr/bin/${pattern}; do
+		# check for: file or symlink, executable
+		if { [ -f "${exe}" ] || [ -L "${exe}" ]; } && [ -x "${exe}" ];
+		then
+			# ask for version
+			versionstring="$(${exe} --version 2>/dev/null | \
+				grep 'clang version [0-9]')"
+			if [ "${versionstring}" != "" ];
+			then
+				version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
+				echo "${version} ${exe}" >> "${list}.unsort"
+			fi
+		fi
+	done
 done
 
 # do the same for the compiler mentioned in the given file
