@@ -2,8 +2,8 @@
 
 # first parameter: architecture (e.g. x86_64)
 # second parameter: temp folder
-# third parameter: requested version
-# fourth parameter (optional): file containing additional compilers
+# third parameter: compiler type
+# fourth parameter: requested version
 
 if [ $# -lt 3 ];
 then
@@ -13,10 +13,10 @@ fi
 
 arch="$1"
 temp="$2"
-req="$3"
-add="$4"
+type="$3"
+req="$4"
 
-list="${temp}/available_gcc"
+list="${temp}/available_versions"
 
 # create file for available compiler list
 mkdir -p "${temp}"
@@ -24,53 +24,43 @@ truncate -s 0 "${list}.unsort"
 
 get_version ()
 {
-	# extract the version information out of 'gcc --version'
+	# extract the version information out of "$type --version"
 	# take the three digit version at the end of the line
 	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\).*$|\1|p'
 }
 
-# ask all files which may be a gcc for the version
-# first try with architecture in the name
-gccs="$(ls /usr/bin/${arch}*gcc* 2>&1)"
-if [ $? -ne 0 ]; then
-	# nothing found, now try without architecture
-	gccs="$(ls /usr/bin/*gcc* 2>&1)"
+# check for available compilers of the given type
+# first try: ${arch}*${type}*
+compiler=$(find /usr/bin/ -mindepth 1 -maxdepth 1 -name "${arch}*${type}*" -type f -executable)
+if [ "${compiler}" = "" ]; then
+	# nothing found, not try without architecture
+	compiler=$(find /usr/bin/ -mindepth 1 -maxdepth 1 -name "*${type}*" -type f -executable)
 fi
-for exe in $gccs;
-do
-	# check for: file, no link, executable
-	if [ -f "${exe}" ] && [ ! -L "${exe}" ] && [ -x "${exe}" ];
-	then
-		# ask for version
-		versionstring="$(${exe} --version | \
-			grep 'gcc.*[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}.*$')"
-		# and extract it if requirements are fulfilled
-		if [ "${versionstring}" != "" ];
-		then
-			version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
-			# write the version in a temp file
-			echo "$version ${exe}" >> "${list}.unsort"
-		fi
+if [ "${compiler}" = "" ]; then
+	# still nothing found, print errorlog
+	echo "no compiler of type ${type} found!" >&2
+	exit 1;
+fi
+# filter only those matching "*${type}$"
+compiler_tmp=$(echo "${compiler}" | grep "${type}$")
+# add those matching "*{type}-<at least one digit>"
+compiler_tmp="${compiler_tmp} $(echo "${compiler}" | grep "${type}-[0-9]\+")"
+if [ "${compiler_tmp}" != "" ]; then
+	# if there is either "*${type}$" or "*${type}-<at least one digit>"
+	# limit the try to these executables
+	compiler="${compiler_tmp}"
+fi
+for exe in ${compiler}; do
+	# use first line of output as version string
+	versionstring=$(${exe} --version | head -n 1)
+	# check if it is the requested type
+	if [ $(echo "${versionstring}" | grep -c "^${type}\s") -eq 1 ]; then
+		# yes
+		version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
+		# write the version in a temp file
+		echo "$version ${exe}" >> "${list}.unsort"
 	fi
 done
-
-# do the same for the compiler mentioned in the given file
-if [ $# -gt 3 ] && [ -f "${add}" ];
-then
-	for exe in $(cat "${add}")
-	do
-		if [ -f "${exe}" ] && [ -x "${exe}" ];
-		then
-			versionstring="$(${exe} --version | \
-				grep 'gcc.*[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}$')"
-			if [ "${versionstring}" != "" ];
-			then
-				version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
-				echo "$version ${exe}" >> "${list}.unsort"
-			fi
-		fi
-	done
-fi
 
 # sort the list of compilers
 sort -n "${list}.unsort" > "${list}"
