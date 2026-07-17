@@ -140,7 +140,7 @@ without a complete update in advance.
 
 `sudo zypper update`  
 `sudo reboot` (or execute a manual reboot)  
-`sudo zypper install dkms path`
+`sudo zypper install dkms patch`
 
 I didn't check the regular Suse update mechanism. Please check the logs when
 Suse does a kernel update.
