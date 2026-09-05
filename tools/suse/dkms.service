@@ -1,0 +1,13 @@
+[Unit]
+Description=Builds and install new kernel modules through DKMS
+Documentation=man:dkms(8)
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/sbin/dkms_wrapper.sh autoinstall --verbose --kernelver %v
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

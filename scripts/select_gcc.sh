@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # first parameter: architecture (e.g. x86_64)
 # second parameter: temp folder

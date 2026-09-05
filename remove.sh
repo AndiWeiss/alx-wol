@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # remove the dkms system for this module
 # which module is defined in dkms.conf
@@ -63,6 +63,7 @@ then
 
 		# now remove the sources
 		rm -rf "/var/lib/dkms/${this_name}"
+		rm -rf "/usr/src/${this_name}-${this_version}"
 
 		# removal succeeded
 		echo "deinstallation of ${this_name} completed"

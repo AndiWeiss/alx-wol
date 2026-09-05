@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # fetch and patch the sources defined in sources.txt
 #

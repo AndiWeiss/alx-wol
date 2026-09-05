@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # this script handles the initrd creation
 

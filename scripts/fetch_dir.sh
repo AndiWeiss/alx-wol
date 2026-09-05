@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/sh
 
 # fetch a complete directory from kernel.org
 # the file containing the directory content has been fetched
