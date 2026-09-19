@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # reads tags out of the configuration file
 # first parameter: kernel version the tag has to be exported for

@@ -10,6 +10,9 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+**Version 3.2 contians the possibility to fetch the kernel sources out of a 
+local git repository. The patches have been checked up to kernel version 7.2.**
+
 **Version 3.1 contains new patches. With these the issue with Wake feature
 configured to `d` is fixed since kernel version 6.5.**
 
@@ -38,12 +41,12 @@ kernel.org and created a patch to bring it in again.
 With the next kernel update of Ubuntu I decided to get the compilation
 of the module done automatically. Here my journey into dkms started.
 
-Now I released version 3.0 of alx-wol.
+Now I released version 3.2 of alx-wol.
 
 And to be honest: this is much more than alx driver with wake on lan.
 This version is a framework for creating kernel modules based on original
 kernel sources. It automatically detects the kernel version and the
-compiler used for the kernel. Then it downloads the original kernel
+compiler used for building the kernel. Then it fetches the original kernel
 sources, applies configurable patches and builds. And last but not
 least it takes care to bring the module into the initramfs.
 
@@ -52,8 +55,11 @@ two more examples which can be found in 'other_examples'.
 
 ## Compatibility
 
-alx-wol 3.0 has been tested on Debian 12 (Bookworm), Ubuntu 24.4 (Noble Numbat),
-Proxmox VE 8.3-1, Fedora 41-1.4, Arch 2025-02-01 and Suse Leap 15.6.
+alx-wol 3.2 has been tested on Debian 13 (Trixie), Ubuntu 26.4 (Resolute 
+Raccoon), Proxmox VE 9.2, Fedora 44, Arch (unknown version, 08-26) and openSuse 
+Tumbleweed (20260830).
+
+The alx patches are full functional from kernel version 5.15 up to 7.2.2.
 
 ## How to use it
 
@@ -61,15 +67,24 @@ Proxmox VE 8.3-1, Fedora 41-1.4, Arch 2025-02-01 and Suse Leap 15.6.
 - clone the git repository
 - cd into alx-wol
 - execute *as root* **./install.sh**  
-  you may use **sudo** for the execution
+  you may use **sudo** for the execution  
+  *CAUTION!* in case of suse you have to use  
+  `sudo bash install.sh`
+- If you want to use a local kernel git repo as source:  
+  add the parameter `local-linux-repo=<path_to_repo>`  
+  If there is no local repo the install script will ask if it shall be cloned
 
 ## Distribution dependent requirements
+
+### all distributions
+
+If a local git repo shall be used don't forget to install git.
 
 ### Debian
 
 Before doing the installation on a Debian system please install dkms and wget.
 
-`sudo apt install dkms wget`
+`sudo apt install dkms wget linux-headers-amd64`
 
 ### Ubuntu
 
@@ -98,22 +113,17 @@ and installed.
 To be able to install alx-wol on a Proxmos system dkms and the matching linux
 headers have to be installed.
 
-`sudo apt install dkms proxmox-headers-$(uname -r)`
+To be able to install the headers you either have to have a valid subscription 
+or you have to chose the `no-subscription`
 
-I didn't check the Proxmox update mechanisms. Because of this a kernel update
-should be carefully checked as I don't know if the headers are updated together
-with the kernel. For me it is a bit strange that the installation of dkms
-doesn't lead to the linux headers matching to the current kernel.
+`sudo apt install dkms pve-headers`
 
 ### Arch linux
 
 There are multiple possibilities to install an Arch linux system. Any of these
-requires dkms, wget, which and linux-headers to be installed.
+require dkms, wget, which and linux-headers to be installed.
 
 `pacman -S dkms wget which linux-headers`
-
-I didn't check the regular Arch update mechanism. Please check the logs when
-Arch does a kernel update.
 
 ### Fedora
 
@@ -127,25 +137,88 @@ and after that install dkms and do the alx-wol installation.
 `sudo reboot` (or execute a manual reboot)  
 `sudo yum install dkms`
 
-I didn't check the regular Fedora update mechanism. Please check the logs when
-Fedora does a kernel update.
-
 ### Suse
 
 The default Suse installation doesn't contain patch, so additionally to dkms
 patch has to be installed, too.
+
+The installation script can't be called by `sudo ./install.sh ...`  
+Instead a bash has to be started with sudo to execute the install script:  
+`sudo bash ./install.sh`
 
 On Suse, comparable to Fedora, I faced issues when doing the installation
 without a complete update in advance.
 
 `sudo zypper update`  
 `sudo reboot` (or execute a manual reboot)  
-`sudo zypper install dkms path`
+`sudo zypper install dkms patch`
 
-I didn't check the regular Suse update mechanism. Please check the logs when
-Suse does a kernel update.
+Suse uses `dkms` different compared to any other distribution I've seen up to 
+now. They don't use the kernel update hooks, instead they created a systemd 
+target which executes a `dkms autoinstall` during the next startup.
 
-## Ho to remove it
+This happens rather early in the startup - long before ethernet is up and 
+usable. To get the compilation work we depend on functional internet access. 
+Therefore the systemd file has to be modifed.
+
+The file `/usr/lib/systemd/system/dkms.service` contains the definition of the 
+service. You can either modify the file as explained below or simply copy it 
+from `tools/suse` directory. The command for copy is  
+`sudo cp tools/suse/dkms.service /usr/lib/systemd/system/dkms.service`
+
+There is a line  
+`Before=network-pre.target graphical.target`  
+This has to be modified to  
+`After=network-online.target`
+
+But that's not enough - it seems that at least the name service is still 
+not available after this target. Therefore we also have to modify what gets 
+called.
+
+The line  
+`ExecStart=/usr/sbin/dkms autoinstall --verbose --kernelver %v`  
+is responsible to call dkms.
+
+This start has to be slowed down until the name resoltion is functional. To do 
+so I introduce the shell script `dkms_wrapper.sh` located in the `tools/suse` 
+directory. Copy this file (you need root right for that) to `/usr/sbin`. The 
+command to do so is  
+`sudo cp tools/suse/dkms_wrapper.sh /usr/sbin`
+
+After that change the line `ExecStart=/usr/sbin/dkms ...` to 
+`ExecStart=/usr/sbin/dkms_wrapper.sh ...`. The script executes a loop to get 
+the name resolution of `git.kernel.org` for max 10 times. As soon as that 
+worked it calls `dkms` with all of the parameters.
+
+To be sure that the system starts up even if the network stays down add the 
+line  
+`TimeoutSec=300`  
+behind the `ExecStart` line.
+
+This is still not enough for suse linux.
+
+Calling the installation script `install.sh` (and also - if you want to remove 
+alx-wol again - `remove.sh`) has to be done by starting it in a new shell. So 
+instead of calling `sudo ./install.sh` one has to call `sudo bash ./install.sh`.
+
+And in case of using a local git repo containing the linux sources this repo 
+has to be owned by root. So you have to  
+`sudo chown -R root:root <path_to_linux_repo>`  
+before installation of alx-wol.
+
+Last step is to reload the systemd configuration:
+
+```
+sudo systemctl daemon-reload
+sudo systemctl reenable dkms.service
+```
+
+Now - during the first startup after a kernel update - dkms will compile the 
+alx-wol module. As this happens after the network came up I can't tell how 
+a server may react. The network will stop working during installation of the 
+compiled module and start working again when the new module is installed.
+
+## How to remove it
 
 Calling the script `remove.sh` will remove all installed versions of
 this package from dkms. Only the installed data will be removed, the
@@ -224,8 +297,12 @@ To recover from this there are two possibilities:
   `sudo rmmod alx`  
   `sudo insmod $(find /lib/modules/$(uname -r)/ -name 'alx.*' | grep -v /kernel/)`
 
-
 # History
+
+**Version 3.2**
+
+Possibility to use a local git repo instead of fetching with `wget`  
+Patches checked up to kernel version 7.2.2
 
 **Version 3.1**
 

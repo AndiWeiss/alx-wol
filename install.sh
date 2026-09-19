@@ -1,10 +1,63 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # install the dkms system for this module
 # which module is defined in dkms.conf
 # the required config is done in sources.txt
 
 script="$(basename "$0")"
+gitcall="$(dirname $0)/scripts/gitcall.sh"
+llr_file=local-linux-repo
+
+warn_suse ()
+{
+	grep -i 'ID=.*SUSE' /etc/os-release > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		if [ ! -f /usr/sbin/dkms_wrapper.sh ]; then
+			echo "*******************************************"
+			echo "***   This seems to be a suse system    ***"
+			echo "***     dkms_wrapper.sh is missing      ***"
+			echo "***   please take care to modify the    ***"
+			echo "*** installation according to README.md ***"
+			echo "*******************************************"
+			exit 1
+		fi
+		grep 'dkms_wrapper\.sh' /usr/lib/systemd/system/dkms.service > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			echo "*******************************************"
+			echo "***   This seems to be a suse system    ***"
+			echo "***      dkms.service doesn't call      ***"
+			echo "***  dkms_warpper.sh. Check README.md   ***"
+			echo "***      for correct installation       ***"
+			echo "*******************************************"
+			exit 1
+		fi
+		find /etc/systemd -type l | grep -c 'dkms\.service' > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			echo "*******************************************"
+			echo "***   This seems to be a suse system    ***"
+			echo "***  dkms.service seems to be disabled  ***"
+			echo "***     Check README.md for correct     ***"
+			echo "***            installation             ***"
+			echo "*******************************************"
+			exit 1
+		fi
+	fi
+}
+
+warn_suse_git ()
+{
+	grep -i 'ID=.*SUSE' /etc/os-release > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		if [ "$(stat -c %U "${local_linux_repo}/.git")" != "root" ]; then
+			echo "*******************************************"
+			echo "*** suse requires the local linux repo  ***"
+			echo "*** owned by root. This is not the case ***"
+			echo "***    !!!! dkms run will fail !!!!     ***"
+			echo "*******************************************"
+			exit 1
+		fi
+	fi
+}
 
 # script requires root rights
 # check if we're root
@@ -23,12 +76,60 @@ if [ -z $chk ]; then
 	exit 1
 fi
 
-# check if wget is installed
-chk="$(which wget)"
-if [ -z $chk ]; then
-	# no, exit with error
-	echo "${script}: usage requires wget!" 1>&2
-	exit 1
+warn_suse
+
+if [ $# -gt 0 ]; then
+	echo "$1" | grep -c '^local-linux-repo=' >> /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "only local-linux-repo=... accepted as parameter"
+		exit 1
+	fi
+	local_linux_repo="$(realpath "$(echo "$1" | sed 's|local-linux-repo=||')")"
+	if [ ! -d "${local_linux_repo}" ]; then
+		echo "no directory ${local_linux_repo}"
+		doit="N"
+		echo -n "	shall the kernel repo be cloned there [y/N]? "
+		read doit
+		if [ "${doit}" = "y" ] || [ "${doit}" = "Y" ]; then
+			mkdir -p "${local_linux_repo}"
+			if [ $? -ne 0 ]; then
+				echo "error creating directory ${local_linux_repo}"
+				exit 1
+			fi
+			git clone https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux "${local_linux_repo}"
+			if [ $? -ne 0 ]; then
+				echo "error on cloning kernel repo"
+				exit 1
+			fi
+		else
+			echo "no kernel repo found at ${local_linux_repo}"
+			exit 1
+		fi
+	fi
+	warn_suse_git
+	${gitcall} -C "${local_linux_repo}" status > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "${local_linux_repo} seems to be no git repo"
+		exit 1
+	fi
+	if [ ! -f "${local_linux_repo}/README" ] ||
+	[ "$(grep -n '^Linux kernel$' "${local_linux_repo}/README")" != "1:Linux kernel" ]; then
+		echo "${local_linux_repo} seems to be no kernel"
+		exit 1
+	fi
+	echo "local-linux-repo=${local_linux_repo}" > ${llr_file}
+else
+	rm -f ${llr_file}
+fi
+
+if [ ! -f ${llr_file} ]; then
+	# check if wget is installed
+	chk="$(which wget)"
+	if [ -z $chk ]; then
+		# no, exit with error
+		echo "${script}: usage requires wget!" 1>&2
+		exit 1
+	fi
 fi
 
 # the following part checks if the required information
@@ -45,10 +146,10 @@ if [ ! -d /lib/modules/$kernelver ]; then
 fi
 
 # check if a compiler is available
-if [ "$(which gcc)" = "" ]; then
-	# no gcc available
-	echo "$(basename $0): it seems there is no gcc available" >&2
-	echo "gcc is required for building modules" >&2
+if [ "$(which gcc)" = "" ] && [ "$(which clang)" = "" ]; then
+	# no compiler available
+	echo "$(basename $0): it seems there is no compiler (gcc or clang) available" 1>&2
+	echo "a compiler is required for building modules" 1>&2
 	exit 1
 fi
 
@@ -143,6 +244,7 @@ while [ $i -lt $last ]; do
 		&& [ "${file}" != "remove.sh" ] \
 		&& [ "${file}" != "kernelpatching.md" ] \
 		&& [ "${file}" != "kernelsources" ] \
+		&& [ "${file}" != "tools" ] \
 		&& [ "${file}" != "other_examples" ];
 	then
 		cp --preserve=mode,timestamps -r "${file}" "/usr/src/${this_name}-${this_version}/"
@@ -153,6 +255,8 @@ done
 dkms install -m "${this_name}" -v "${this_version}"
 if [ $? -eq 0 ]; then
 	echo "#### installation of ${this_name} version ${this_version} succeeded ####"
+	exit 0
 else
 	echo "#### FAILED installation of ${this_name} version ${this_version} ####"
+	exit 1
 fi

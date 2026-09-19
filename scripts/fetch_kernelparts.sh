@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # fetch files and directories from kernel.org
 
@@ -8,6 +8,8 @@
 # $3: directory where to put them
 # $4: file to list all fetched files
 
+gitcall="$(dirname $0)/gitcall.sh"
+
 # script to fetch a single file
 fetch_file="$(dirname "$0")/fetch_single_file.sh"
 export fetch_file
@@ -15,6 +17,8 @@ export fetch_file
 # script to fetch a directory
 fetch_dir="$(dirname "$0")/fetch_dir.sh"
 export fetch_dir
+
+llr_file="${PWD}/local-linux-repo"
 
 # script to read a tag from config file
 read_tag="$(dirname "$0")/read_tag.sh"
@@ -87,25 +91,44 @@ do
 		fi
 	fi
 
-	# fetch a single file
-	${fetch_file} "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
-	if [ $? -ne 0 ];
-	then
-		# fetch failed, exit with error
-		exit 1
-	fi
-
-	# check if the file contains a http link inside the kernel tree
-	i=$(grep -c "^<html><head><title>/${kerneldir}/${file}/</title></head>$" ${writeto}/${file})
-	if [ ${i} -ne 0 ];
-	then
-		# yes, so this is not a file but a directory
-		# fetch the complete directory
-		"${fetch_dir}" "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
+	if [ -f "${llr_file}" ]; then
+		local_linux_repo="$(grep 'local-linux-repo=' "${llr_file}"|sed 's|^local-linux-repo=||')"
+		${gitcall} -C "${local_linux_repo}" fetch >> ${writeto}/make.log 2>&1
+		if [ $? -ne 0 ]; then
+			echo "error fetching local git repo ${local_linux_repo}" >> ${writeto}/make.log
+			exit 1
+		fi
+		${gitcall} -C "${local_linux_repo}" checkout v${kernver} >> ${writeto}/make.log 2>&1
+		if [ $? -eq 0 ]; then
+			cp -r "${local_linux_repo}/${kerneldir}/${file}" "${writeto}/${file}" >> ${writeto}/make.log 2>&1
+			if [ $? -ne 0 ]; then
+				exit 1
+			fi
+		else
+			echo "error on checkout of v${kernver} in local git repo ${local_linux_repo}" >> ${writeto}/make.log
+			exit 1
+		fi
+	else
+		# fetch a single file
+		${fetch_file} "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
 		if [ $? -ne 0 ];
 		then
-			# fetching failed, exit with error
+			# fetch failed, exit with error
 			exit 1
+		fi
+
+		# check if the file contains a http link inside the kernel tree
+		i=$(grep -c "^<html><head><title>/${kerneldir}/${file}/</title></head>$" ${writeto}/${file})
+		if [ ${i} -ne 0 ];
+		then
+			# yes, so this is not a file but a directory
+			# fetch the complete directory
+			"${fetch_dir}" "${kerneldir}/${file}" "${writeto}/${file}" "${got_files}"
+			if [ $? -ne 0 ];
+			then
+				# fetching failed, exit with error
+				exit 1
+			fi
 		fi
 	fi
 done

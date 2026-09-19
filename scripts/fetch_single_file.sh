@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # fetch a single kernel source file
 

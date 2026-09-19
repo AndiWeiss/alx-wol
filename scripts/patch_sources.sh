@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # parameter:
 # $1: kernel version (e.g. 6.5.13)
