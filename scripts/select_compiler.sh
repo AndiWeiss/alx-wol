@@ -16,6 +16,8 @@ temp="$2"
 type="$3"
 req="$4"
 
+detect_version="$(echo "$0" | sed 's|/[^/]*$|/detect_version.sh|')"
+
 list="${temp}/available_versions"
 
 # create file for available compiler list
@@ -26,7 +28,7 @@ get_version ()
 {
 	# extract the version information out of "$type --version"
 	# take the three digit version at the end of the line
-	echo "$1" | sed -n 's|^.* \([[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\.[[:digit:]]\{1,\}\).*$|\1|p'
+	${detect_version} "$1"
 }
 
 # check for available compilers of the given type
@@ -52,13 +54,15 @@ if [ "${compiler_tmp}" != "" ]; then
 fi
 for exe in ${compiler}; do
 	# use first line of output as version string
-	versionstring=$(${exe} --version | head -n 1)
-	# check if it is the requested type
-	if [ $(echo "${versionstring}" | grep -c "^${type}\s") -eq 1 ]; then
-		# yes
-		version="$(get_version "${versionstring}" | sed -n 's|\.| |gp')"
-		# write the version in a temp file
-		echo "$version ${exe}" >> "${list}.unsort"
+	versionstring="$(${detect_version} "$(${exe} --version | head -n 1)")"
+	if [ "$(echo "${versionstring}" | grep -c "${type}")" -eq 1 ]; then
+		v="$(echo ${versionstring} | sed 's|^[^ ]* \([0-9]\+\)\..*$|\1|')"
+		printf "%04d " "$v" >> "${list}.unsort"
+		v="$(echo ${versionstring} | sed 's|^[^ ]* [0-9]\+\.\([0-9]\+\)\..*$|\1|')"
+		printf "%04d " "$v" >> "${list}.unsort"
+		v="$(echo ${versionstring} | sed 's|^[^ ]* [0-9]\+\.[0-9]\+\.||')"
+		printf "%04d " "$v" >> "${list}.unsort"
+		echo "${exe}" >> "${list}.unsort"
 	fi
 done
 
