@@ -6,9 +6,8 @@
 
 script="$(basename "$0")"
 gitcall="$(dirname $0)/scripts/gitcall.sh"
-llr_file=local-linux-repo
 
-warn_suse ()
+warn_distro ()
 {
 	grep -i 'ID=.*SUSE' /etc/os-release > /dev/null 2>&1
 	if [ $? -eq 0 ]; then
@@ -33,18 +32,57 @@ warn_suse ()
 		fi
 		find /etc/systemd -type l | grep -c 'dkms\.service' > /dev/null 2>&1
 		if [ $? -ne 0 ]; then
-			echo "*******************************************"
-			echo "***   This seems to be a suse system    ***"
-			echo "***  dkms.service seems to be disabled  ***"
-			echo "***     Check README.md for correct     ***"
-			echo "***            installation             ***"
-			echo "*******************************************"
+			echo "This seems to be a suse system."
+			echo "enabling dkms.service"
+			systemctl daemon-reload
+			systemctl enable dkms.service
+		fi
+	fi
+
+	grep -i 'ID=cachyos' /etc/os-release > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		if [ "${local_linux_repo}" = "" ]; then
+			echo "*********************************************"
+			echo "***   This seems to be a cachyos system   ***"
+			echo "***  cachyos requires a local linux repo  ***"
+			echo "***       call again with parameter       ***"
+			echo "*** local-linux-repo=<path_to_linux_repo> ***"
+			echo "*********************************************"
 			exit 1
+		else
+			if [ -f /usr/local/bin/kernelfetcher.sh ] && \
+				[ $(grep -c /usr/local/bin/kernelfetcher.sh /etc/systemd/system/kernelfetcher.service) ]; then
+				echo "seems the required cachyos mechanisms are already installed"
+			else
+				echo "This seems to be a cachyos system."
+				echo "additional installation is required:"
+				echo "a systemd service to fetch linux repo"
+				echo "during startup (kernelfetcher.service)"
+				echo -n "shall this be installed and activated (y/N)? "
+				read doit
+				if [ "${doit}" != "y" ] && [ "${doit}" != "Y" ]; then
+					echo "without installation dkms will fail."
+					echo "aborting."
+					exit 1
+				fi
+				echo "creating script /usr/local/bin/kernelfetcher.sh"
+				sed "s|LOCAL_LINUX_REPO|${local_linux_repo}|" tools/cachyos/kernelfetcher.sh > /usr/local/bin/kernelfetcher.sh
+				chmod +x /usr/local/bin/kernelfetcher.sh
+				echo "creating service kernelfetcher.service"
+				cp tools/cachyos/kernelfetcher.service /etc/systemd/system/
+				echo "reloading daemons"
+				systemctl daemon-reload
+				echo "enabling kernelfetcher.service"
+				systemctl enable kernelfetcher.service
+				echo "starting kernelfetcher.service (may take some time)"
+				systemctl start kernelfetcher.service
+				echo "now install the dkms mechanism"
+			fi
 		fi
 	fi
 }
 
-warn_suse_git ()
+warn_distro_git ()
 {
 	grep -i 'ID=.*SUSE' /etc/os-release > /dev/null 2>&1
 	if [ $? -eq 0 ]; then
@@ -76,14 +114,13 @@ if [ -z $chk ]; then
 	exit 1
 fi
 
-warn_suse
-
 if [ $# -gt 0 ]; then
 	echo "$1" | grep -c '^local-linux-repo=' >> /dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo "only local-linux-repo=... accepted as parameter"
 		exit 1
 	fi
+	${gitcall} inval
 	local_linux_repo="$(realpath "$(echo "$1" | sed 's|local-linux-repo=||')")"
 	if [ ! -d "${local_linux_repo}" ]; then
 		echo "no directory ${local_linux_repo}"
@@ -106,7 +143,7 @@ if [ $# -gt 0 ]; then
 			exit 1
 		fi
 	fi
-	warn_suse_git
+	warn_distro_git
 	${gitcall} -C "${local_linux_repo}" status > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
 		echo "${local_linux_repo} seems to be no git repo"
@@ -117,10 +154,11 @@ if [ $# -gt 0 ]; then
 		echo "${local_linux_repo} seems to be no kernel"
 		exit 1
 	fi
-	echo "local-linux-repo=${local_linux_repo}" > ${llr_file}
 else
 	rm -f ${llr_file}
 fi
+
+warn_distro
 
 if [ ! -f ${llr_file} ]; then
 	# check if wget is installed
@@ -208,7 +246,7 @@ if [ $? -eq 0 ]; then
 		# this is mandatory for ubuntu 23.x
 		# otherwise the module will not be installed in the initrd
 		# we don't care if there is already a hook file!
-		cp dkms-adder /etc/initramfs-tools/hooks
+		cp tools/dkms-adder /etc/initramfs-tools/hooks
 	else
 		# if the hook directory is not available we don't
 		# know how to continue ...

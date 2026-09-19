@@ -10,6 +10,8 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
+**Version 3.3 supports CachyOS**
+
 **Version 3.2 contians the possibility to fetch the kernel sources out of a 
 local git repository. The patches have been checked up to kernel version 7.2.**
 
@@ -70,6 +72,8 @@ The alx patches are full functional from kernel version 5.15 up to 7.2.2.
   you may use **sudo** for the execution  
   *CAUTION!* in case of suse you have to use  
   `sudo bash install.sh`
+  *Caution!' in case of CachyOS you need to have a local linux kernel git 
+  repository
 - If you want to use a local kernel git repo as source:  
   add the parameter `local-linux-repo=<path_to_repo>`  
   If there is no local repo the install script will ask if it shall be cloned
@@ -137,6 +141,39 @@ and after that install dkms and do the alx-wol installation.
 `sudo reboot` (or execute a manual reboot)  
 `sudo yum install dkms`
 
+### CachyOs
+
+In case of CachyOs I struggled hard with CachyOs behavior during `pacman -Syu` 
+run. In a very early stage of the update CachyOS seems to cut all ethernet 
+connections. With this the mechanism as it was used up to now - using `wget` to 
+fetch the kernel sources for sure doesn't work.
+
+Additionally I run into an issue with git.kernel.org. Because of heavy misuse 
+kernel.org decided to limit the access on the files via regular https access. 
+With this and my multiple tests of the mechanism I run again and again in 
+`error 404 - file not found` during wget.
+
+The access on the complete repo via git is not limited.
+
+This was the point where I decided to add a feature to have a local git repo 
+of the linux kernel and keep that updated. After I introduced that into version 
+3.2 I started CachyOs analysis again.
+
+Ethernet is shut down realy early during update. Therefore I introduce a new 
+systemd service which keeps track of the linux git repository. As the complete 
+service is defined by me I added it to the installation process.
+
+So just use
+
+`sudo ./install.sh local-linux-repo=<path_to_linux_repo>`
+
+and the install script will ask you for the installation of the service.
+
+The service is executed on each system start. It checks if the last repo 
+fetch is more than one day ago. If yes it executes a `git fetch` on it. With 
+this the update process will always find a fresh kernel repo containing all 
+new version tags.
+
 ### Suse
 
 The default Suse installation doesn't contain patch, so additionally to dkms
@@ -157,9 +194,30 @@ Suse uses `dkms` different compared to any other distribution I've seen up to
 now. They don't use the kernel update hooks, instead they created a systemd 
 target which executes a `dkms autoinstall` during the next startup.
 
-This happens rather early in the startup - long before ethernet is up and 
-usable. To get the compilation work we depend on functional internet access. 
-Therefore the systemd file has to be modifed.
+Is I have to modify the original suse mechanisms I dind't bring the changes 
+into the installation process. Instead the process checks if the expectations 
+are fulfiled and stops if they aren't with a detailed information.
+
+If you think that the suse system hasn't been modifed since I introduced the 
+mechanism you can just compy two files and you're done. But I *strongly* 
+recommend to check if the files still contain what I explain. In the case that 
+Suse modifies those files and you replace them by my (now old, not matching) 
+files you may break your system.
+
+If you want to copy:
+
+```
+sudo cp tools/suse/dkms.service /usr/lib/systemd/system/dkms.service
+sudo cp tools/suse/dkms_wrapper.sh /usr/sbin
+sudo systemctl daemon-reload
+sudo systemctl enable dkms.service
+```
+
+No the explanation what Suse does with dkms:
+
+Suses `dkms.service` is started as a single shot rather early in the startup - 
+long before ethernet is up and usable. To get the compilation work we depend on 
+functional internet access. Therefore the systemd file has to be modifed.
 
 The file `/usr/lib/systemd/system/dkms.service` contains the definition of the 
 service. You can either modify the file as explained below or simply copy it 
@@ -210,7 +268,7 @@ Last step is to reload the systemd configuration:
 
 ```
 sudo systemctl daemon-reload
-sudo systemctl reenable dkms.service
+sudo systemctl enable dkms.service
 ```
 
 Now - during the first startup after a kernel update - dkms will compile the 
@@ -240,6 +298,11 @@ If you also want to remove the original sources use
 
 **Caution!** There is a minus between the package name and the version,
 NOT a slash as in the previous command!
+
+
+**Caution!** Neither on CachyOs nor on Suse the additional modifications of 
+the system are removed. You have to remove them by hand if you want to get rid 
+of them.
 
 ## Issues found on Ubuntu
 
@@ -298,6 +361,10 @@ To recover from this there are two possibilities:
   `sudo insmod $(find /lib/modules/$(uname -r)/ -name 'alx.*' | grep -v /kernel/)`
 
 # History
+
+**Version 3.3**
+
+Added support for CachyOs (need a local kernel git repo for that)
 
 **Version 3.2**
 

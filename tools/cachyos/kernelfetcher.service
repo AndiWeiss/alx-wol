@@ -1,0 +1,17 @@
+[Unit]
+Description=fetch kernel repo
+
+# wait for network online
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# run only once on each startup
+Type=oneshot
+# keep status "active" after execution, avoids a second run
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/kernelfetcher.sh
+
+[Install]
+# link it to network online
+WantedBy=network-online.target

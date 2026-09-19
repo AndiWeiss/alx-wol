@@ -18,8 +18,6 @@ export fetch_file
 fetch_dir="$(dirname "$0")/fetch_dir.sh"
 export fetch_dir
 
-llr_file="${PWD}/local-linux-repo"
-
 # script to read a tag from config file
 read_tag="$(dirname "$0")/read_tag.sh"
 
@@ -83,7 +81,7 @@ do
 	if [ ${i} -eq 1 ];
 	then
 		# it's a path, create the destination path
-		mkdir -p $(dirname "${writeto}/${file}")
+		mkdir -p "$(dirname "${writeto}/${file}")"
 		if [ $? -ne 0 ];
 		then
 			# path creation failed, exit with error
@@ -91,14 +89,14 @@ do
 		fi
 	fi
 
-	if [ -f "${llr_file}" ]; then
-		local_linux_repo="$(grep 'local-linux-repo=' "${llr_file}"|sed 's|^local-linux-repo=||')"
-		${gitcall} -C "${local_linux_repo}" fetch >> ${writeto}/make.log 2>&1
+	local_linux_repo="$(${gitcall} get_dir)"
+	if [ "${local_linux_repo}" != "" ]; then
+		${gitcall} -C replace_by_path fetch >> ${writeto}/make.log 2>&1
 		if [ $? -ne 0 ]; then
 			echo "error fetching local git repo ${local_linux_repo}" >> ${writeto}/make.log
 			exit 1
 		fi
-		${gitcall} -C "${local_linux_repo}" checkout v${kernver} >> ${writeto}/make.log 2>&1
+		${gitcall} -C replace_by_path checkout v${kernver} >> ${writeto}/make.log 2>&1
 		if [ $? -eq 0 ]; then
 			cp -r "${local_linux_repo}/${kerneldir}/${file}" "${writeto}/${file}" >> ${writeto}/make.log 2>&1
 			if [ $? -ne 0 ]; then
