@@ -10,10 +10,11 @@ This package adds the support for wol again as dkms package.
 
 ## * news *
 
-**Version 3.3 supports CachyOS**
+**Version 3.3 supports CachyOS** Please keep in mind: this system supports no 
+kernel release candidates.
 
 **Version 3.2 contians the possibility to fetch the kernel sources out of a 
-local git repository. The patches have been checked up to kernel version 7.2.**
+local git repository.** The patches have been checked up to kernel version 7.2.
 
 **Version 3.1 contains new patches. With these the issue with Wake feature
 configured to `d` is fixed since kernel version 6.5.**
@@ -57,11 +58,12 @@ two more examples which can be found in 'other_examples'.
 
 ## Compatibility
 
-alx-wol 3.2 has been tested on Debian 13 (Trixie), Ubuntu 26.4 (Resolute 
-Raccoon), Proxmox VE 9.2, Fedora 44, Arch (unknown version, 08-26) and openSuse 
-Tumbleweed (20260830).
+alx-wol 3.3 has been tested on Debian 13 (Trixie), Ubuntu 26.4 (Resolute 
+Raccoon), Proxmox VE 9.2, Fedora 44, Arch (unknown version, 08-26), openSuse 
+Tumbleweed (20260830) and CachyOs (unknown version, installation medium 
+20260809).
 
-The alx patches are full functional from kernel version 5.15 up to 7.2.2.
+The alx patches are full functional from kernel version 5.15 up to 7.3.
 
 ## How to use it
 
@@ -71,7 +73,7 @@ The alx patches are full functional from kernel version 5.15 up to 7.2.2.
 - execute *as root* **./install.sh**  
   you may use **sudo** for the execution  
   *CAUTION!* in case of suse you have to use  
-  `sudo bash install.sh`
+  `sudo bash install.sh`  
   *Caution!' in case of CachyOS you need to have a local linux kernel git 
   repository
 - If you want to use a local kernel git repo as source:  
