@@ -37,7 +37,7 @@ dir="$(realpath $2)"
 
 call_git_with_user ()
 {
-	if [ "$3" = "fetch" ]; then
+	if [ "$3" = "fetch" ] && [ -f "${dir}/.git/FETCH_HEAD" ]; then
 		current_time=$(/usr/bin/date +%s)
 		prev_time=$(/usr/bin/stat -c %Y "${dir}/.git/FETCH_HEAD")
 
