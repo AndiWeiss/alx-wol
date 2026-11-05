@@ -34,6 +34,8 @@ fi
 
 kernver="$1"
 export kernver
+# git tags of x.y.0 releases are named vx.y (e.g. v7.3, not v7.3.0)
+kerneltag="v$(echo "${kernver}" | sed 's|\.0$||')"
 config="$2"
 writeto="$3"
 got_files="$4"
@@ -96,14 +98,14 @@ do
 			echo "error fetching local git repo ${local_linux_repo}" >> ${writeto}/make.log
 			exit 1
 		fi
-		${gitcall} -C replace_by_path checkout v${kernver} >> ${writeto}/make.log 2>&1
+		${gitcall} -C replace_by_path checkout ${kerneltag} >> ${writeto}/make.log 2>&1
 		if [ $? -eq 0 ]; then
 			cp -r "${local_linux_repo}/${kerneldir}/${file}" "${writeto}/${file}" >> ${writeto}/make.log 2>&1
 			if [ $? -ne 0 ]; then
 				exit 1
 			fi
 		else
-			echo "error on checkout of v${kernver} in local git repo ${local_linux_repo}" >> ${writeto}/make.log
+			echo "error on checkout of ${kerneltag} in local git repo ${local_linux_repo}" >> ${writeto}/make.log
 			exit 1
 		fi
 	else
